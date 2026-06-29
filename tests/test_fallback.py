@@ -16,6 +16,8 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_fred_series')
     @patch('scripts.update_data.fetch_m2_growth')
     @patch('scripts.update_data.fetch_sp500_breadth')
+    @patch('scripts.update_data.fetch_sp500_ad_line')
+    @patch('scripts.update_data.fetch_sp500_new_highs_lows')
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
@@ -24,6 +26,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
+        mock_fetch_new_highs_lows,
+        mock_fetch_ad_line,
         mock_fetch_breadth,
         mock_fetch_m2,
         mock_fetch_fred,
@@ -45,6 +49,8 @@ class TestDataPipelineFallback(unittest.TestCase):
                 "ism_pmi": [{"date": yesterday_str, "value": 51.0}],
                 "m2_growth": [{"date": yesterday_str, "value": 1.5}],
                 "sp500_breadth": [{"date": yesterday_str, "value": 65.0}],
+                "sp500_ad_line": [{"date": yesterday_str, "value": 100}],
+                "sp500_new_highs_lows": [{"date": yesterday_str, "highs": 10, "lows": 2}],
                 "fear_greed": [{"date": yesterday_str, "value": 45.0}],
                 "insider_ratio": [{"date": yesterday_str, "value": 0.25}],
                 "sp500_trend": [{"date": yesterday_str, "value": 5000.0, "ma50": 4900.0, "ma200": 4800.0}]
@@ -57,6 +63,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_fred.return_value = []
         mock_fetch_m2.return_value = []
         mock_fetch_breadth.return_value = []
+        mock_fetch_ad_line.side_effect = ValueError("AD Line fail")
+        mock_fetch_new_highs_lows.side_effect = ValueError("Highs/Lows fail")
         mock_fetch_fg.return_value = {"date": today_str, "value": 50.0}
         mock_fetch_insider.return_value = {"date": today_str, "value": 0.3}
 
@@ -83,12 +91,31 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(trend_series[1]["date"], today_str)
         self.assertEqual(trend_series[1]["value"], 5000.0)
 
+        # Check that ad_line and new_highs_lows were duplicated too
+        ad_series = saved_data["indicators"]["sp500_ad_line"]
+        self.assertEqual(len(ad_series), 2)
+        self.assertEqual(ad_series[0]["date"], yesterday_str)
+        self.assertEqual(ad_series[0]["value"], 100)
+        self.assertEqual(ad_series[1]["date"], today_str)
+        self.assertEqual(ad_series[1]["value"], 100)
+
+        hl_series = saved_data["indicators"]["sp500_new_highs_lows"]
+        self.assertEqual(len(hl_series), 2)
+        self.assertEqual(hl_series[0]["date"], yesterday_str)
+        self.assertEqual(hl_series[0]["highs"], 10)
+        self.assertEqual(hl_series[0]["lows"], 2)
+        self.assertEqual(hl_series[1]["date"], today_str)
+        self.assertEqual(hl_series[1]["highs"], 10)
+        self.assertEqual(hl_series[1]["lows"], 2)
+
     @patch('scripts.update_data.load_existing_data')
     @patch('scripts.update_data.save_data')
     @patch('scripts.update_data.fetch_vix')
     @patch('scripts.update_data.fetch_fred_series')
     @patch('scripts.update_data.fetch_m2_growth')
     @patch('scripts.update_data.fetch_sp500_breadth')
+    @patch('scripts.update_data.fetch_sp500_ad_line')
+    @patch('scripts.update_data.fetch_sp500_new_highs_lows')
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
@@ -97,6 +124,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
+        mock_fetch_new_highs_lows,
+        mock_fetch_ad_line,
         mock_fetch_breadth,
         mock_fetch_m2,
         mock_fetch_fred,
@@ -113,6 +142,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_fred.side_effect = ValueError("FRED fail")
         mock_fetch_m2.side_effect = ValueError("M2 fail")
         mock_fetch_breadth.side_effect = ValueError("Breadth fail")
+        mock_fetch_ad_line.side_effect = ValueError("AD Line fail")
+        mock_fetch_new_highs_lows.side_effect = ValueError("Highs/Lows fail")
         mock_fetch_fg.side_effect = ValueError("FG fail")
         mock_fetch_insider.side_effect = ValueError("Insider fail")
 
@@ -136,6 +167,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(saved_data["indicators"]["vix"], [])
         self.assertEqual(saved_data["indicators"]["fed_funds"], [])
         self.assertEqual(saved_data["indicators"]["sp500_trend"], [])
+        self.assertEqual(saved_data["indicators"]["sp500_ad_line"], [])
+        self.assertEqual(saved_data["indicators"]["sp500_new_highs_lows"], [])
 
     @patch('scripts.update_data.load_existing_data')
     @patch('scripts.update_data.save_data')
@@ -143,6 +176,8 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_fred_series')
     @patch('scripts.update_data.fetch_m2_growth')
     @patch('scripts.update_data.fetch_sp500_breadth')
+    @patch('scripts.update_data.fetch_sp500_ad_line')
+    @patch('scripts.update_data.fetch_sp500_new_highs_lows')
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
@@ -151,6 +186,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
+        mock_fetch_new_highs_lows,
+        mock_fetch_ad_line,
         mock_fetch_breadth,
         mock_fetch_m2,
         mock_fetch_fred,
@@ -168,6 +205,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_fred.return_value = [{"date": today_str, "value": 4.5}]
         mock_fetch_m2.return_value = [{"date": today_str, "value": 2.0}]
         mock_fetch_breadth.return_value = [{"date": today_str, "value": 70.0}]
+        mock_fetch_ad_line.return_value = [{"date": today_str, "value": 150}]
+        mock_fetch_new_highs_lows.return_value = [{"date": today_str, "highs": 25, "lows": 5}]
         mock_fetch_fg.return_value = {"date": today_str, "value": 55.0}
         mock_fetch_insider.return_value = {"date": today_str, "value": 0.35}
 
@@ -185,6 +224,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(saved_data["indicators"]["yield_curve"], [{"date": today_str, "value": 4.5}])
         self.assertEqual(saved_data["indicators"]["m2_growth"], [{"date": today_str, "value": 2.0}])
         self.assertEqual(saved_data["indicators"]["sp500_breadth"], [{"date": today_str, "value": 70.0}])
+        self.assertEqual(saved_data["indicators"]["sp500_ad_line"], [{"date": today_str, "value": 150}])
+        self.assertEqual(saved_data["indicators"]["sp500_new_highs_lows"], [{"date": today_str, "highs": 25, "lows": 5}])
         # F&G / Insider should contain history + today's value
         self.assertEqual(saved_data["indicators"]["fear_greed"][-1], {"date": today_str, "value": 55.0})
         self.assertEqual(saved_data["indicators"]["insider_ratio"][-1], {"date": today_str, "value": 0.35})

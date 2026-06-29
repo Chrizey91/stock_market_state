@@ -286,7 +286,13 @@ def calculate_breadth(df_close):
     data_points.sort(key=lambda x: x['date'])
     return data_points
 
-def fetch_sp500_breadth():
+_sp500_df_cache = None
+
+def get_sp500_data():
+    global _sp500_df_cache
+    if _sp500_df_cache is not None:
+        return _sp500_df_cache
+        
     logger.info("Fetching S&P 500 constituents...")
     tickers = get_sp500_tickers()
     if not tickers:
@@ -317,10 +323,67 @@ def fetch_sp500_breadth():
         
     df_all_close = pd.concat(all_close_dfs, axis=1)
     df_all_close = df_all_close.loc[:, ~df_all_close.columns.duplicated()]
+    _sp500_df_cache = df_all_close
+    return _sp500_df_cache
+
+def calculate_ad_line(df_close):
+    df_close = df_close.sort_index()
+    df_diff = df_close.diff()
+    advancers = (df_diff > 0).sum(axis=1)
+    decliners = (df_diff < 0).sum(axis=1)
+    daily_change = advancers - decliners
+    ad_line = daily_change.cumsum()
     
-    logger.info(f"Combined data shape: {df_all_close.shape}. Calculating breadth indicator...")
-    breadth_data = calculate_breadth(df_all_close)
-    return breadth_data
+    # Filter to the last 1 year (365 calendar days) of data to match other sentiment/internal indicators
+    start_date = datetime.now() - timedelta(days=365)
+    ad_line = ad_line[ad_line.index >= start_date]
+    
+    data_points = []
+    for date_val, val in ad_line.items():
+        data_points.append({
+            "date": date_val.strftime('%Y-%m-%d'),
+            "value": int(val)
+        })
+    data_points.sort(key=lambda x: x['date'])
+    return data_points
+
+def calculate_new_highs_lows(df_close):
+    df_close = df_close.sort_index()
+    rolling_max = df_close.rolling(window=252, min_periods=252).max()
+    rolling_min = df_close.rolling(window=252, min_periods=252).min()
+    is_high = df_close == rolling_max
+    is_low = df_close == rolling_min
+    valid_mask = rolling_max.notna()
+    
+    highs_count = (is_high & valid_mask).sum(axis=1)
+    lows_count = (is_low & valid_mask).sum(axis=1)
+    
+    # Filter to the last 1 year (365 calendar days) of data to match other sentiment/internal indicators
+    start_date = datetime.now() - timedelta(days=365)
+    highs_count = highs_count[highs_count.index >= start_date]
+    lows_count = lows_count[lows_count.index >= start_date]
+    
+    data_points = []
+    for date_val in highs_count.index:
+        data_points.append({
+            "date": date_val.strftime('%Y-%m-%d'),
+            "highs": int(highs_count.loc[date_val]),
+            "lows": int(lows_count.loc[date_val])
+        })
+    data_points.sort(key=lambda x: x['date'])
+    return data_points
+
+def fetch_sp500_breadth():
+    df_all_close = get_sp500_data()
+    return calculate_breadth(df_all_close)
+
+def fetch_sp500_ad_line():
+    df_all_close = get_sp500_data()
+    return calculate_ad_line(df_all_close)
+
+def fetch_sp500_new_highs_lows():
+    df_all_close = get_sp500_data()
+    return calculate_new_highs_lows(df_all_close)
 
 def generate_mock_fear_greed(days=365):
     end_date = datetime.now()
@@ -469,6 +532,21 @@ def fetch_sp500_trend():
     data_points.sort(key=lambda x: x['date'])
     return data_points
 
+def calculate_slope(y_values):
+    if len(y_values) < 2:
+        return 0.0
+    n = len(y_values)
+    x = list(range(n))
+    sum_x = sum(x)
+    sum_y = sum(y_values)
+    sum_xx = sum(i*i for i in x)
+    sum_xy = sum(i*y for i, y in zip(x, y_values))
+    denominator = (n * sum_xx - sum_x * sum_x)
+    if denominator == 0:
+        return 0.0
+    slope = (n * sum_xy - sum_x * sum_y) / denominator
+    return slope
+
 def evaluate_scorecard(indicators):
     scorecard = []
     
@@ -539,13 +617,22 @@ def evaluate_scorecard(indicators):
         "value": display_val
     })
     
-    # 4. sp500_ad_line (unimplemented)
+    # 4. sp500_ad_line
+    ad_data = indicators.get("sp500_ad_line", [])
+    if ad_data and len(ad_data) >= 20:
+        last_20_vals = [float(pt["value"]) for pt in ad_data[-20:]]
+        slope = calculate_slope(last_20_vals)
+        status = "healthy" if slope > 0 else "unhealthy"
+        display_val = "Rising" if slope > 0 else "Falling"
+    else:
+        status = "unavailable"
+        display_val = None
     scorecard.append({
         "id": "sp500_ad_line",
         "label": "S&P 500 A/D Line",
         "category": "Breadth",
-        "status": "unavailable",
-        "value": None
+        "status": status,
+        "value": display_val
     })
     
     # 5. equal_vs_cap_weight (unimplemented)
@@ -752,6 +839,32 @@ def main():
         logger.warning(f"Failed to fetch/compute S&P 500 Breadth: {e}")
         breadth_list = existing_indicators.get("sp500_breadth", [])
         updated_data["indicators"]["sp500_breadth"] = fallback_duplicate_last_value("sp500_breadth", breadth_list)
+
+    # Fetch/Compute S&P 500 Advance-Decline Line
+    try:
+        updated_data["indicators"]["sp500_ad_line"] = fetch_sp500_ad_line()
+    except Exception as e:
+        logger.warning(f"Failed to fetch/compute S&P 500 A/D Line: {e}")
+        ad_list = existing_indicators.get("sp500_ad_line", [])
+        updated_data["indicators"]["sp500_ad_line"] = fallback_duplicate_last_value("sp500_ad_line", ad_list)
+
+    # Fetch/Compute S&P 500 New Highs vs Lows
+    try:
+        updated_data["indicators"]["sp500_new_highs_lows"] = fetch_sp500_new_highs_lows()
+    except Exception as e:
+        logger.warning(f"Failed to fetch/compute S&P 500 New Highs/Lows: {e}")
+        highs_lows_list = existing_indicators.get("sp500_new_highs_lows", [])
+        if highs_lows_list:
+            today_str = datetime.now().strftime('%Y-%m-%d')
+            last_hl = highs_lows_list[-1]
+            if last_hl.get("date") == today_str:
+                updated_data["indicators"]["sp500_new_highs_lows"] = highs_lows_list
+            else:
+                new_hl = dict(last_hl)
+                new_hl["date"] = today_str
+                updated_data["indicators"]["sp500_new_highs_lows"] = highs_lows_list + [new_hl]
+        else:
+            updated_data["indicators"]["sp500_new_highs_lows"] = []
 
     # Fetch/Compute CNN Fear & Greed Index
     fear_greed_list = updated_data["indicators"].get("fear_greed", [])

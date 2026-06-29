@@ -130,7 +130,7 @@
         </button>
         <button class="tab-btn" data-tab="economy" id="tab-btn-economy">
           <i data-lucide="bar-chart-3"></i>
-          <span>Economy & Internals</span>
+          <span>Market Breadth</span>
         </button>
       </nav>
 
@@ -490,6 +490,58 @@
               </div>
               <div class="card-body">
                 <div id="sp500-breadth-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- S&P 500 Advance-Decline -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">MARKET BREADTH</span>
+                  <h2>S&P 500 Advance-Decline</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-ad-line">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>About S&P 500 Advance-Decline Line</h4>
+                      <p>The cumulative difference between the number of advancing and declining S&P 500 constituents each day. It measures market participation and internals.</p>
+                      <hr>
+                      <p><strong>Significance:</strong> Divergence between the index and the A/D line is a major warning signal (e.g. a rising index but a falling A/D line, or a rising A/D line diverging from a falling index). A rising A/D line diverging from a falling index is a warning signal.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="sp500-ad-line-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- S&P 500 New Highs/Lows -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">MARKET BREADTH</span>
+                  <h2>S&P 500 New Highs/Lows</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-highs-lows">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>About S&P 500 New Highs/Lows</h4>
+                      <p>Tracks the daily count of S&P 500 components making new 52-week highs versus new 52-week lows.</p>
+                      <hr>
+                      <p><strong>Significance:</strong> Shows the internal expansion or contraction of the market. A healthy market rally has many more stocks making new highs than new lows. A sudden spike in new lows during a rally is a warning sign of internal weakness.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="sp500-highs-lows-chart" class="chart-container"></div>
               </div>
             </div>
           </div>

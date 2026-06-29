@@ -799,6 +799,115 @@ document.addEventListener('DOMContentLoaded', () => {
       charts.sp500Breadth = new ApexCharts(document.querySelector("#sp500-breadth-chart"), opts);
       charts.sp500Breadth.render();
     }
+
+    // Render S&P 500 A/D Line Chart
+    const sp500AdLine = indicators.sp500_ad_line || [];
+    if (sp500AdLine.length > 0) {
+      const adSeries = sp500AdLine.map(item => [new Date(item.date).getTime(), item.value]);
+      const opts = {
+        series: [{
+          name: 'S&P 500 A/D Line',
+          data: adSeries
+        }],
+        chart: {
+          type: 'line',
+          height: '100%',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#06b6d4'],
+        stroke: { curve: 'smooth', width: 2.5 },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: {
+            formatter: (value) => value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+          }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark'
+        }
+      };
+      if (charts.sp500AdLine) charts.sp500AdLine.destroy();
+      charts.sp500AdLine = new ApexCharts(document.querySelector("#sp500-ad-line-chart"), opts);
+      charts.sp500AdLine.render();
+    }
+
+    // Render S&P 500 New Highs/Lows Chart
+    const sp500HighsLows = indicators.sp500_new_highs_lows || [];
+    if (sp500HighsLows.length > 0) {
+      const highsSeries = sp500HighsLows.map(item => [new Date(item.date).getTime(), item.highs]);
+      const lowsSeries = sp500HighsLows.map(item => [new Date(item.date).getTime(), item.lows]);
+      
+      const opts = {
+        series: [
+          {
+            name: 'New Highs',
+            data: highsSeries
+          },
+          {
+            name: 'New Lows',
+            data: lowsSeries
+          }
+        ],
+        chart: {
+          type: 'bar',
+          height: '100%',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#10b981', '#ef4444'], // Green for Highs, Red for Lows
+        plotOptions: {
+          bar: {
+            horizontal: false,
+            columnWidth: '55%'
+          },
+        },
+        dataLabels: {
+          enabled: false
+        },
+        stroke: {
+          show: true,
+          width: 2,
+          colors: ['transparent']
+        },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: {
+            formatter: (value) => value.toFixed(0)
+          }
+        },
+        legend: {
+          show: true,
+          position: 'top',
+          horizontalAlign: 'right',
+          labels: { colors: '#a1a1aa' }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark'
+        }
+      };
+      if (charts.sp500HighsLows) charts.sp500HighsLows.destroy();
+      charts.sp500HighsLows = new ApexCharts(document.querySelector("#sp500-highs-lows-chart"), opts);
+      charts.sp500HighsLows.render();
+    }
   }
 
   // Hero Section Rendering (Market Regime Score & Sidebar Summary)

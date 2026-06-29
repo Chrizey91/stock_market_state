@@ -7,7 +7,7 @@ import os
 
 # Add the project root and scripts directory to python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from scripts.update_data import get_sp500_tickers, chunk_tickers, calculate_breadth
+from scripts.update_data import get_sp500_tickers, chunk_tickers, calculate_breadth, calculate_ad_line, calculate_new_highs_lows
 
 class TestMarketBreadth(unittest.TestCase):
     
@@ -89,6 +89,62 @@ class TestMarketBreadth(unittest.TestCase):
         # So exactly 1 out of 2 stocks is above. Breadth = 50%
         self.assertEqual(breadth[-1]['value'], 50.0)
         self.assertEqual(breadth[-1]['date'], dates[-1].strftime('%Y-%m-%d'))
+
+    def test_calculate_ad_line(self):
+        # Setup short df with 5 business days
+        # We want to test the cumulative calculation:
+        # Day 0: [100, 200] -> CumSum = 0 (first row is NaN for diff)
+        # Day 1: [101, 201] -> Both rise (+1, +1). Adv=2, Dec=0. daily=2. CumSum = 2
+        # Day 2: [102, 202] -> Both rise (+1, +1). Adv=2, Dec=0. daily=2. CumSum = 4
+        # Day 3: [101, 201] -> Both fall (-1, -1). Adv=0, Dec=2. daily=-2. CumSum = 2
+        # Day 4: [103, 200] -> A rises (+2), B falls (-1). Adv=1, Dec=1. daily=0. CumSum = 2
+        dates = pd.date_range(end=pd.Timestamp.now(), periods=5, freq='B')
+        
+        df_close = pd.DataFrame({
+            "A": [100.0, 101.0, 102.0, 101.0, 103.0],
+            "B": [200.0, 201.0, 202.0, 201.0, 200.0]
+        }, index=dates)
+        
+        ad_line = calculate_ad_line(df_close)
+        
+        self.assertEqual(len(ad_line), 5)
+        self.assertEqual(ad_line[0]["value"], 0)
+        self.assertEqual(ad_line[1]["value"], 2)
+        self.assertEqual(ad_line[2]["value"], 4)
+        self.assertEqual(ad_line[3]["value"], 2)
+        self.assertEqual(ad_line[4]["value"], 2)
+        
+        self.assertEqual(ad_line[4]["date"], dates[-1].strftime('%Y-%m-%d'))
+
+    def test_calculate_new_highs_lows(self):
+        # 52-week High/Low requires 252 trading days.
+        # Let's create 300 business days.
+        # Asset A: price rises steadily from 100 to 400.
+        # Asset B: price falls steadily from 400 to 100.
+        # On the last day, Asset A will make a 52-week High (close is 400, max of window is 400).
+        # Asset B will make a 52-week Low (close is 100, min of window is 100).
+        dates = pd.date_range(end=pd.Timestamp.now(), periods=300, freq='B')
+        
+        close_a = np.linspace(100, 400, 300)
+        close_b = np.linspace(400, 100, 300)
+        
+        df_close = pd.DataFrame({
+            "A": close_a,
+            "B": close_b
+        }, index=dates)
+        
+        new_highs_lows = calculate_new_highs_lows(df_close)
+        
+        # Valid window is from day 252 (252nd element is at index 251).
+        # There should be 300 - 251 = 49 valid data points.
+        # But filtering keeps the last 365 calendar days, which is approx 261 business days.
+        self.assertEqual(len(new_highs_lows), 261)
+        
+        # On the last day: Highs should be 1 (Asset A), Lows should be 1 (Asset B).
+        latest = new_highs_lows[-1]
+        self.assertEqual(latest["highs"], 1)
+        self.assertEqual(latest["lows"], 1)
+        self.assertEqual(latest["date"], dates[-1].strftime('%Y-%m-%d'))
 
 if __name__ == '__main__':
     unittest.main()
