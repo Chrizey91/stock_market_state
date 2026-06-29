@@ -138,7 +138,7 @@
       <div class="tab-content">
         <!-- Price & Trend Section -->
         <section id="price-trend-tab" class="tab-pane active">
-          <div class="grid-layout cols-1">
+          <div class="grid-layout cols-2">
             <!-- S&P 500 Price & Trend Chart -->
             <div class="card chart-card">
               <div class="card-header">
@@ -171,6 +171,39 @@
               </div>
               <div class="card-body">
                 <div id="sp500-trend-chart" class="chart-container" style="height: 400px;"></div>
+              </div>
+            </div>
+
+            <!-- Equal-Weight vs Cap-Weight Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">PRICE & TREND</span>
+                  <h2>Equal-Weight vs Cap-Weight</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="equal-vs-cap-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="equal-vs-cap-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-equal-vs-cap">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Equal-Weight (RSP) vs Cap-Weight (SPY)</h4>
+                      <p>This chart displays the rolling 3-month (63 trading days) returns of the S&P 500 Equal-Weight ETF (RSP) and the S&P 500 Cap-Weighted ETF (SPY), along with their performance spread (RSP - SPY).</p>
+                      <hr>
+                      <ul>
+                        <li><strong>Healthy (Spread within ±5%):</strong> RSP and SPY performance is balanced, suggesting healthy and broad-based market participation.</li>
+                        <li><strong>Unhealthy (Spread outside ±5%):</strong> Indicates strong divergence. When SPY significantly outperforms RSP, market gains are dangerously concentrated in a few mega-caps.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="equal-vs-cap-chart" class="chart-container" style="height: 400px;"></div>
               </div>
             </div>
           </div>

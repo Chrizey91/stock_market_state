@@ -185,6 +185,115 @@ document.addEventListener('DOMContentLoaded', () => {
       charts.sp500Trend = new ApexCharts(document.querySelector("#sp500-trend-chart"), options);
       charts.sp500Trend.render();
     }
+
+    // 2. Equal-Weight vs Cap-Weight Chart
+    const eqCapData = indicators.equal_vs_cap_weight || [];
+    if (eqCapData.length > 0) {
+      const latest = eqCapData[eqCapData.length - 1];
+      const latestSpread = latest.spread;
+      
+      const valEl = document.getElementById('equal-vs-cap-val');
+      const statusEl = document.getElementById('equal-vs-cap-status');
+      
+      if (valEl) {
+        valEl.textContent = `${latestSpread > 0 ? '+' : ''}${latestSpread.toFixed(2)}%`;
+      }
+      
+      if (statusEl) {
+        statusEl.className = 'stat-status';
+        if (latestSpread >= -5.0 && latestSpread <= 5.0) {
+          statusEl.textContent = 'HEALTHY (BALANCED BREADTH)';
+          statusEl.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+          statusEl.style.color = 'var(--accent-green)';
+        } else {
+          statusEl.textContent = `UNHEALTHY (${latestSpread < -5.0 ? 'CONCENTRATED IN MEGA-CAPS' : 'EQUAL-WEIGHT OUTPERFORMING'})`;
+          statusEl.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+          statusEl.style.color = 'var(--accent-red)';
+        }
+      }
+
+      const rspSeries = eqCapData.map(item => [new Date(item.date).getTime(), item.rsp_return]);
+      const spySeries = eqCapData.map(item => [new Date(item.date).getTime(), item.spy_return]);
+      const spreadSeries = eqCapData.map(item => [new Date(item.date).getTime(), item.spread]);
+
+      const options = {
+        series: [
+          {
+            name: 'RSP (Equal-Weight) Return',
+            type: 'line',
+            data: rspSeries
+          },
+          {
+            name: 'SPY (Cap-Weighted) Return',
+            type: 'line',
+            data: spySeries
+          },
+          {
+            name: 'Spread (RSP - SPY)',
+            type: 'area',
+            data: spreadSeries
+          }
+        ],
+        chart: {
+          height: 450,
+          type: 'line',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: {
+            enabled: true,
+            easing: 'easeinout',
+            speed: 800
+          }
+        },
+        colors: ['#10b981', '#3b82f6', '#8b5cf6'], // Emerald, Blue, Purple
+        fill: {
+          type: ['solid', 'solid', 'gradient'],
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.15,
+            opacityTo: 0.0,
+            stops: [0, 90]
+          }
+        },
+        stroke: {
+          width: [3, 3, 1.5],
+          curve: 'smooth'
+        },
+        grid: {
+          borderColor: 'rgba(255, 255, 255, 0.05)',
+          strokeDashArray: 4
+        },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 6,
+          labels: {
+            formatter: (value) => `${value.toFixed(1)}%`
+          }
+        },
+        legend: {
+          show: true,
+          position: 'top',
+          horizontalAlign: 'right',
+          labels: { colors: '#a1a1aa' }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark',
+          y: {
+            formatter: (value) => value !== null ? `${value.toFixed(2)}%` : 'N/A'
+          }
+        }
+      };
+
+      if (charts.equalVsCap) charts.equalVsCap.destroy();
+      charts.equalVsCap = new ApexCharts(document.querySelector("#equal-vs-cap-chart"), options);
+      charts.equalVsCap.render();
+    }
   }
 
   // Sentiment & Volatility Tab Rendering

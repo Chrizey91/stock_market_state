@@ -21,8 +21,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
+    @patch('scripts.update_data.fetch_equal_vs_cap_weight')
     def test_vix_fallback_duplicates_last_value(
         self,
+        mock_fetch_equal_vs_cap,
         mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
@@ -53,13 +55,14 @@ class TestDataPipelineFallback(unittest.TestCase):
                 "sp500_new_highs_lows": [{"date": yesterday_str, "highs": 10, "lows": 2}],
                 "fear_greed": [{"date": yesterday_str, "value": 45.0}],
                 "insider_ratio": [{"date": yesterday_str, "value": 0.25}],
-                "sp500_trend": [{"date": yesterday_str, "value": 5000.0, "ma50": 4900.0, "ma200": 4800.0}]
+                "sp500_trend": [{"date": yesterday_str, "value": 5000.0, "ma50": 4900.0, "ma200": 4800.0}],
+                "equal_vs_cap_weight": [{"date": yesterday_str, "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}]
             }
         }
         
-        # VIX fetch fails, others succeed
         mock_fetch_vix.side_effect = ValueError("VIX API is down")
         mock_fetch_trend.side_effect = ValueError("Trend API is down")
+        mock_fetch_equal_vs_cap.side_effect = ValueError("Equal/Cap API is down")
         mock_fetch_fred.return_value = []
         mock_fetch_m2.return_value = []
         mock_fetch_breadth.return_value = []
@@ -108,6 +111,17 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(hl_series[1]["highs"], 10)
         self.assertEqual(hl_series[1]["lows"], 2)
 
+        eq_cap_series = saved_data["indicators"]["equal_vs_cap_weight"]
+        self.assertEqual(len(eq_cap_series), 2)
+        self.assertEqual(eq_cap_series[0]["date"], yesterday_str)
+        self.assertEqual(eq_cap_series[0]["rsp_return"], 4.0)
+        self.assertEqual(eq_cap_series[0]["spy_return"], 6.0)
+        self.assertEqual(eq_cap_series[0]["spread"], -2.0)
+        self.assertEqual(eq_cap_series[1]["date"], today_str)
+        self.assertEqual(eq_cap_series[1]["rsp_return"], 4.0)
+        self.assertEqual(eq_cap_series[1]["spy_return"], 6.0)
+        self.assertEqual(eq_cap_series[1]["spread"], -2.0)
+
     @patch('scripts.update_data.load_existing_data')
     @patch('scripts.update_data.save_data')
     @patch('scripts.update_data.fetch_vix')
@@ -119,8 +133,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
+    @patch('scripts.update_data.fetch_equal_vs_cap_weight')
     def test_fallback_no_previous_history(
         self,
+        mock_fetch_equal_vs_cap,
         mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
@@ -139,6 +155,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         # All fetches fail
         mock_fetch_vix.side_effect = ValueError("VIX fail")
         mock_fetch_trend.side_effect = ValueError("Trend fail")
+        mock_fetch_equal_vs_cap.side_effect = ValueError("Equal/Cap fail")
         mock_fetch_fred.side_effect = ValueError("FRED fail")
         mock_fetch_m2.side_effect = ValueError("M2 fail")
         mock_fetch_breadth.side_effect = ValueError("Breadth fail")
@@ -169,6 +186,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(saved_data["indicators"]["sp500_trend"], [])
         self.assertEqual(saved_data["indicators"]["sp500_ad_line"], [])
         self.assertEqual(saved_data["indicators"]["sp500_new_highs_lows"], [])
+        self.assertEqual(saved_data["indicators"]["equal_vs_cap_weight"], [])
 
     @patch('scripts.update_data.load_existing_data')
     @patch('scripts.update_data.save_data')
@@ -181,8 +199,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
+    @patch('scripts.update_data.fetch_equal_vs_cap_weight')
     def test_initialization_creates_new_file(
         self,
+        mock_fetch_equal_vs_cap,
         mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
@@ -202,6 +222,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         # All fetches succeed
         mock_fetch_vix.return_value = [{"date": today_str, "value": 14.5}]
         mock_fetch_trend.return_value = [{"date": today_str, "value": 5200.0, "ma50": 5100.0, "ma200": 5000.0}]
+        mock_fetch_equal_vs_cap.return_value = [{"date": today_str, "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}]
         mock_fetch_fred.return_value = [{"date": today_str, "value": 4.5}]
         mock_fetch_m2.return_value = [{"date": today_str, "value": 2.0}]
         mock_fetch_breadth.return_value = [{"date": today_str, "value": 70.0}]
@@ -226,6 +247,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(saved_data["indicators"]["sp500_breadth"], [{"date": today_str, "value": 70.0}])
         self.assertEqual(saved_data["indicators"]["sp500_ad_line"], [{"date": today_str, "value": 150}])
         self.assertEqual(saved_data["indicators"]["sp500_new_highs_lows"], [{"date": today_str, "highs": 25, "lows": 5}])
+        self.assertEqual(saved_data["indicators"]["equal_vs_cap_weight"], [{"date": today_str, "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}])
         # F&G / Insider should contain history + today's value
         self.assertEqual(saved_data["indicators"]["fear_greed"][-1], {"date": today_str, "value": 55.0})
         self.assertEqual(saved_data["indicators"]["insider_ratio"][-1], {"date": today_str, "value": 0.35})

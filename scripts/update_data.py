@@ -532,6 +532,40 @@ def fetch_sp500_trend():
     data_points.sort(key=lambda x: x['date'])
     return data_points
 
+def fetch_equal_vs_cap_weight():
+    logger.info("Fetching RSP and SPY data for Equal-Weight vs Cap-Weight...")
+    # Fetch 1 year of daily closing prices
+    data = yf.download(['RSP', 'SPY'], period='1y', interval='1d', progress=False)
+    if data.empty or 'Close' not in data.columns:
+        raise ValueError("RSP/SPY data is empty or missing Close column")
+        
+    df_close = data['Close'].dropna()
+    if 'RSP' not in df_close.columns or 'SPY' not in df_close.columns:
+        raise ValueError("RSP or SPY Close price data is missing")
+        
+    # Sort index to ensure correct rolling calculation
+    df_close = df_close.sort_index()
+    
+    # Compute rolling 3-month (63 trading days) returns: (Price_t - Price_t-63) / Price_t-63 * 100
+    df_close['rsp_return'] = df_close['RSP'].pct_change(63) * 100
+    df_close['spy_return'] = df_close['SPY'].pct_change(63) * 100
+    df_close['spread'] = df_close['rsp_return'] - df_close['spy_return']
+    
+    # Drop rows with NaN returns
+    df_clean = df_close.dropna(subset=['rsp_return', 'spy_return', 'spread'])
+    
+    data_points = []
+    for date_val, row in df_clean.iterrows():
+        data_points.append({
+            "date": date_val.strftime('%Y-%m-%d'),
+            "rsp_return": round(float(row['rsp_return']), 2),
+            "spy_return": round(float(row['spy_return']), 2),
+            "spread": round(float(row['spread']), 2)
+        })
+        
+    data_points.sort(key=lambda x: x['date'])
+    return data_points
+
 def calculate_slope(y_values):
     if len(y_values) < 2:
         return 0.0
@@ -635,13 +669,26 @@ def evaluate_scorecard(indicators):
         "value": display_val
     })
     
-    # 5. equal_vs_cap_weight (unimplemented)
+    # 5. equal_vs_cap_weight
+    eq_cap_data = indicators.get("equal_vs_cap_weight", [])
+    if eq_cap_data:
+        latest = eq_cap_data[-1]
+        spread = latest.get("spread")
+        if spread is not None:
+            status = "healthy" if -5.0 <= spread <= 5.0 else "unhealthy"
+            display_val = f"{spread:+.2f}%"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
     scorecard.append({
         "id": "equal_vs_cap_weight",
         "label": "Equal-Weight vs Cap-Weight",
         "category": "Breadth",
-        "status": "unavailable",
-        "value": None
+        "status": status,
+        "value": display_val
     })
     
     # 6. eps_growth (unimplemented)
@@ -847,6 +894,24 @@ def main():
         logger.warning(f"Failed to fetch/compute S&P 500 A/D Line: {e}")
         ad_list = existing_indicators.get("sp500_ad_line", [])
         updated_data["indicators"]["sp500_ad_line"] = fallback_duplicate_last_value("sp500_ad_line", ad_list)
+
+    # Fetch/Compute Equal-Weight vs Cap-Weight
+    try:
+        updated_data["indicators"]["equal_vs_cap_weight"] = fetch_equal_vs_cap_weight()
+    except Exception as e:
+        logger.warning(f"Failed to fetch/compute Equal-Weight vs Cap-Weight: {e}")
+        eq_cap_list = existing_indicators.get("equal_vs_cap_weight", [])
+        if eq_cap_list:
+            today_str = datetime.now().strftime('%Y-%m-%d')
+            last_entry = eq_cap_list[-1]
+            if last_entry.get("date") == today_str:
+                updated_data["indicators"]["equal_vs_cap_weight"] = eq_cap_list
+            else:
+                new_entry = dict(last_entry)
+                new_entry["date"] = today_str
+                updated_data["indicators"]["equal_vs_cap_weight"] = eq_cap_list + [new_entry]
+        else:
+            updated_data["indicators"]["equal_vs_cap_weight"] = []
 
     # Fetch/Compute S&P 500 New Highs vs Lows
     try:
