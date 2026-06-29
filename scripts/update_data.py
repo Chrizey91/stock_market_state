@@ -4,6 +4,9 @@ import logging
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 import yfinance as yf
+import requests
+from bs4 import BeautifulSoup
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -150,6 +153,121 @@ def generate_mock_ism_pmi(years=5):
             
     return data_points
 
+def get_sp500_tickers():
+    logger.info("Fetching S&P 500 tickers from Wikipedia...")
+    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        response = requests.get(url, headers=headers, timeout=15)
+        if response.status_code != 200:
+            raise ValueError(f"HTTP error {response.status_code}")
+            
+        soup = BeautifulSoup(response.text, 'html.parser')
+        table = soup.find('table', {'id': 'constituents'})
+        if not table:
+            # Fallback to class if ID is not found
+            table = soup.find('table', class_='wikitable')
+            
+        if not table:
+            raise ValueError("Could not find S&P 500 constituents table on page")
+            
+        tickers = []
+        for row in table.find_all('tr')[1:]:
+            cols = row.find_all('td')
+            if cols:
+                ticker = cols[0].text.strip()
+                # yfinance uses '-' instead of '.' for classes (e.g. BRK-B instead of BRK.B)
+                ticker = ticker.replace('.', '-')
+                tickers.append(ticker)
+                
+        return sorted(list(set(tickers)))
+    except Exception as e:
+        logger.error(f"Error fetching S&P 500 tickers: {e}")
+        raise
+
+def chunk_tickers(tickers, chunk_size):
+    return [tickers[i:i + chunk_size] for i in range(0, len(tickers), chunk_size)]
+
+def calculate_breadth(df_close):
+    # Sort index (dates) to ensure rolling works correctly
+    df_close = df_close.sort_index()
+    
+    # Compute 200-day SMA for each column
+    sma = df_close.rolling(window=200, min_periods=200).mean()
+    
+    # Check if close is greater than SMA
+    is_above = df_close > sma
+    
+    # Valid SMA mask
+    valid_sma = sma.notna()
+    
+    # Count of stocks above SMA per day
+    above_count = (is_above & valid_sma).sum(axis=1)
+    
+    # Count of stocks with valid SMA per day
+    total_valid = valid_sma.sum(axis=1)
+    
+    # Calculate percentage
+    # Avoid division by zero
+    breadth_pct = pd.Series(index=df_close.index, dtype=float)
+    valid_dates = total_valid > 0
+    breadth_pct[valid_dates] = (above_count[valid_dates] / total_valid[valid_dates]) * 100
+    
+    # We want to drop NaNs (where no stocks had 200 days of history yet)
+    breadth_pct = breadth_pct.dropna()
+    
+    # Filter to the last 1 year (365 calendar days) of data to match other sentiment/internal indicators
+    start_date = datetime.now() - timedelta(days=365)
+    breadth_pct = breadth_pct[breadth_pct.index >= start_date]
+    
+    # Convert to JSON format
+    data_points = []
+    for date_val, val in breadth_pct.items():
+        data_points.append({
+            "date": date_val.strftime('%Y-%m-%d'),
+            "value": round(float(val), 2)
+        })
+        
+    data_points.sort(key=lambda x: x['date'])
+    return data_points
+
+def fetch_sp500_breadth():
+    logger.info("Fetching S&P 500 constituents...")
+    tickers = get_sp500_tickers()
+    if not tickers:
+        raise ValueError("No tickers retrieved from S&P 500 list")
+        
+    logger.info(f"Retrieved {len(tickers)} tickers. Downloading closing prices in batches...")
+    
+    # Download close prices in chunks
+    chunks = chunk_tickers(tickers, chunk_size=100)
+    all_close_dfs = []
+    
+    for i, chunk in enumerate(chunks):
+        logger.info(f"Downloading chunk {i+1}/{len(chunks)} ({len(chunk)} tickers)...")
+        try:
+            data = yf.download(chunk, period='2y', interval='1d', progress=False)
+            if not data.empty and 'Close' in data.columns:
+                close_df = data['Close']
+                if isinstance(close_df, pd.Series):
+                    close_df = close_df.to_frame(name=chunk[0])
+                all_close_dfs.append(close_df)
+            else:
+                logger.warning(f"Chunk {i+1} returned no Close price data.")
+        except Exception as e:
+            logger.error(f"Error downloading chunk {i+1}: {e}")
+            
+    if not all_close_dfs:
+        raise ValueError("Failed to download any ticker closing price data")
+        
+    df_all_close = pd.concat(all_close_dfs, axis=1)
+    df_all_close = df_all_close.loc[:, ~df_all_close.columns.duplicated()]
+    
+    logger.info(f"Combined data shape: {df_all_close.shape}. Calculating breadth indicator...")
+    breadth_data = calculate_breadth(df_all_close)
+    return breadth_data
+
 def main():
     existing_data = load_existing_data()
     
@@ -199,6 +317,14 @@ def main():
         logger.warning(f"Failed to fetch FRED series NAPM (ism_pmi): {e}. Using realistic generated fallback.")
         if "ism_pmi" not in updated_data["indicators"] or not updated_data["indicators"]["ism_pmi"]:
             updated_data["indicators"]["ism_pmi"] = generate_mock_ism_pmi(years=5)
+
+    # Fetch/Compute S&P 500 Breadth (% of stocks above 200-day SMA)
+    try:
+        updated_data["indicators"]["sp500_breadth"] = fetch_sp500_breadth()
+    except Exception as e:
+        logger.warning(f"Failed to fetch/compute S&P 500 Breadth: {e}")
+        if "sp500_breadth" not in updated_data["indicators"]:
+            updated_data["indicators"]["sp500_breadth"] = []
 
     save_data(updated_data)
 

@@ -418,6 +418,84 @@ document.addEventListener('DOMContentLoaded', () => {
       charts.highYieldSpread = new ApexCharts(document.querySelector("#highyield-chart"), opts);
       charts.highYieldSpread.render();
     }
+
+    // Render S&P 500 Breadth Chart
+    const sp500Breadth = indicators.sp500_breadth || [];
+    if (sp500Breadth.length > 0) {
+      const breadthSeries = sp500Breadth.map(item => [new Date(item.date).getTime(), item.value]);
+      const opts = {
+        series: [{
+          name: 'S&P 500 Breadth (% > 200 SMA)',
+          data: breadthSeries
+        }],
+        chart: {
+          type: 'area',
+          height: '100%',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#60a5fa'],
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.3,
+            opacityTo: 0.05,
+            stops: [0, 95]
+          }
+        },
+        stroke: { curve: 'smooth', width: 2.5 },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          min: 0,
+          max: 100,
+          labels: {
+            formatter: (value) => value.toFixed(0) + '%'
+          }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark'
+        },
+        annotations: {
+          yaxis: [
+            {
+              y: 70,
+              borderColor: '#10b981',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#10b981',
+                style: { color: '#fff', background: '#10b981', fontWeight: 600 },
+                text: 'Bullish Support (70%)'
+              }
+            },
+            {
+              y: 30,
+              borderColor: '#ef4444',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#ef4444',
+                style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
+                text: 'Capitulation (30%)'
+              }
+            }
+          ]
+        }
+      };
+      if (charts.sp500Breadth) charts.sp500Breadth.destroy();
+      charts.sp500Breadth = new ApexCharts(document.querySelector("#sp500-breadth-chart"), opts);
+      charts.sp500Breadth.render();
+    }
   }
 
   // Load Data on Initial Page Load

@@ -234,7 +234,7 @@
 
         <!-- Economy & Internals Section -->
         <section id="economy-tab" class="tab-pane">
-          <div class="grid-layout cols-2">
+          <div class="grid-layout cols-3">
             <!-- ISM Manufacturing PMI -->
             <div class="card chart-card">
               <div class="card-header">
@@ -291,6 +291,36 @@
               </div>
               <div class="card-body">
                 <div id="highyield-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- S&P 500 Breadth -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">MARKET INTERNALS</span>
+                  <h2>S&P 500 Breadth (% > 200 SMA)</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-breadth">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>S&P 500 Breadth (% > 200-day SMA)</h4>
+                      <p>The percentage of S&P 500 stocks trading above their 200-day simple moving average. A key measure of stock market participation and internal strength.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&gt; 70% (Bullish Support):</strong> Indicates broad-based bullish support. Rallies with high participation are healthier and more sustainable.</li>
+                        <li><strong>30% - 70% (Neutral):</strong> Normal market conditions with mixed individual stock trends.</li>
+                        <li><strong>&lt; 30% (Capitulation/Weakness):</strong> Suggests major capitulation or severe systemic weakness. Often indicates oversold market bottoms or ongoing bear markets.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="sp500-breadth-chart" class="chart-container"></div>
               </div>
             </div>
           </div>
