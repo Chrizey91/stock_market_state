@@ -7,7 +7,10 @@ import pandas as pd
 import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
+# Load .env file so API keys are available via os.environ
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
