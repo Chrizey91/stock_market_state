@@ -62,12 +62,17 @@
       <div class="tab-content">
         <!-- Sentiment & Volatility Section -->
         <section id="sentiment-tab" class="tab-pane active">
-          <div class="grid-layout">
-            <div class="card chart-card wide-card">
+          <div class="grid-layout cols-3">
+            <!-- CBOE Volatility Index (VIX) -->
+            <div class="card chart-card">
               <div class="card-header">
                 <div class="card-title-group">
-                  <span class="category-tag">SENTIMENT & VOLATILITY</span>
+                  <span class="category-tag">VOLATILITY</span>
                   <h2>CBOE Volatility Index (VIX)</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span id="vix-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="vix-current-status" class="stat-status">LOADING</span>
+                  </div>
                 </div>
                 <div class="card-actions">
                   <div class="info-tooltip-container">
@@ -92,26 +97,74 @@
                 <div id="vix-chart" class="chart-container"></div>
               </div>
             </div>
-            
-            <div class="card info-sidebar-card">
+
+            <!-- CNN Fear & Greed Index -->
+            <div class="card chart-card">
               <div class="card-header">
-                <h2>Sentiment Summary</h2>
+                <div class="card-title-group">
+                  <span class="category-tag">MARKET SENTIMENT</span>
+                  <h2>CNN Fear & Greed Index</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span id="fear-greed-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="fear-greed-current-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-fear-greed">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>About CNN Fear & Greed Index</h4>
+                      <p>A compilation of 7 market indicators tracking investor sentiment. Shows whether fear or greed is driving current stock market pricing.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&lt; 25 (Extreme Fear):</strong> High investor distress. Historically associated with market bottoms.</li>
+                        <li><strong>25 - 45 (Fear):</strong> Investor caution and concern.</li>
+                        <li><strong>45 - 55 (Neutral):</strong> Balanced outlook.</li>
+                        <li><strong>55 - 75 (Greed):</strong> High investor optimism and confidence.</li>
+                        <li><strong>&gt; 75 (Extreme Greed):</strong> High complacency. Often precedes market corrections.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="card-body sidebar-summary-list">
-                <div class="summary-stat-row">
-                  <div class="stat-meta">
-                    <span class="stat-label">Current VIX Level</span>
-                    <span class="stat-desc">Implied volatility expectation</span>
-                  </div>
-                  <div class="stat-value-group">
-                    <span id="vix-current-val" class="stat-value">--</span>
-                    <span id="vix-current-status" class="stat-status">LOADING</span>
+              <div class="card-body">
+                <div id="fear-greed-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- Insider Buying/Selling Ratio -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">INSIDER ACTIVITY</span>
+                  <h2>Insider Buy/Sell Ratio</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span id="insider-ratio-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="insider-ratio-current-status" class="stat-status">LOADING</span>
                   </div>
                 </div>
-                <div class="info-box border-left-accent">
-                  <h3>How to interpret Sentiment</h3>
-                  <p>Sentiment indicators reflect the psychology of crowd behavior. When volatility spikes, it signals hedging activity and panic. For long-term investors, extreme fear (high VIX) is historically a contrarian indicator of market bottoms.</p>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-insider-ratio">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>About Insider Buy/Sell Ratio</h4>
+                      <p>The ratio of insider buy transactions to sell transactions reported on OpenInsider over the trailing 30 days.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&gt; 0.50 (High Confidence):</strong> Significant buying spikes represent corporate confidence and signal market bottoms.</li>
+                        <li><strong>0.15 - 0.50 (Normal):</strong> Balanced activity with typical corporate stock transactions.</li>
+                        <li><strong>&lt; 0.15 (Low Ratio):</strong> Low buying activity. Insiders typically sell shares for diversification and liquidity reasons.</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div class="card-body">
+                <div id="insider-ratio-chart" class="chart-container"></div>
               </div>
             </div>
           </div>

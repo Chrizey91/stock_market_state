@@ -66,114 +66,294 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Sentiment & Volatility Tab Rendering
   function renderSentimentTab(indicators) {
+    // 1. VIX Chart & Indicator
     const vixData = indicators.vix || [];
-    if (vixData.length === 0) return;
-
-    // Get current VIX info
-    const latestVix = vixData[vixData.length - 1];
-    const currentVal = latestVix.value;
-    
-    const valEl = document.getElementById('vix-current-val');
-    const statusEl = document.getElementById('vix-current-status');
-    
-    if (valEl) valEl.textContent = currentVal.toFixed(2);
-    
-    if (statusEl) {
-      statusEl.className = 'stat-status'; // Reset classes
-      if (currentVal < 15) {
-        statusEl.textContent = 'COMPLACENCY';
-        statusEl.classList.add('status-complacent');
-      } else if (currentVal < 25) {
-        statusEl.textContent = 'NORMAL';
-        statusEl.classList.add('status-normal');
-      } else if (currentVal < 35) {
-        statusEl.textContent = 'ELEVATED RISK';
-        statusEl.classList.add('status-elevated');
-      } else {
-        statusEl.textContent = 'PANIC';
-        statusEl.classList.add('status-panic');
+    if (vixData.length > 0) {
+      const latestVix = vixData[vixData.length - 1];
+      const currentVal = latestVix.value;
+      
+      const valEl = document.getElementById('vix-current-val');
+      const statusEl = document.getElementById('vix-current-status');
+      
+      if (valEl) valEl.textContent = currentVal.toFixed(2);
+      
+      if (statusEl) {
+        statusEl.className = 'stat-status'; // Reset classes
+        if (currentVal < 15) {
+          statusEl.textContent = 'COMPLACENCY';
+          statusEl.classList.add('status-complacent');
+        } else if (currentVal < 25) {
+          statusEl.textContent = 'NORMAL';
+          statusEl.classList.add('status-normal');
+        } else if (currentVal < 35) {
+          statusEl.textContent = 'ELEVATED RISK';
+          statusEl.classList.add('status-elevated');
+        } else {
+          statusEl.textContent = 'PANIC';
+          statusEl.classList.add('status-panic');
+        }
       }
-    }
 
-    // Render VIX Chart
-    const vixChartSeries = vixData.map(item => [new Date(item.date).getTime(), item.value]);
-    
-    const options = {
-      series: [{
-        name: 'VIX Close',
-        data: vixChartSeries
-      }],
-      chart: {
-        type: 'area',
-        height: '100%',
-        background: 'transparent',
-        foreColor: '#a1a1aa',
-        toolbar: {
-          show: false
-        },
-        animations: {
-          enabled: true,
-          easing: 'easeinout',
-          speed: 800,
-          animateGradually: {
+      const vixChartSeries = vixData.map(item => [new Date(item.date).getTime(), item.value]);
+      
+      const options = {
+        series: [{
+          name: 'VIX Close',
+          data: vixChartSeries
+        }],
+        chart: {
+          type: 'area',
+          height: '100%',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: {
             enabled: true,
-            delay: 150
-          },
-          dynamicAnimation: {
-            enabled: true,
-            speed: 350
+            easing: 'easeinout',
+            speed: 800,
+            animateGradually: { enabled: true, delay: 150 },
+            dynamicAnimation: { enabled: true, speed: 350 }
           }
-        }
-      },
-      colors: ['#3b82f6'],
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.45,
-          opacityTo: 0.05,
-          stops: [0, 95]
-        }
-      },
-      stroke: {
-        curve: 'smooth',
-        width: 2.5
-      },
-      dataLabels: {
-        enabled: false
-      },
-      grid: {
-        borderColor: 'rgba(255, 255, 255, 0.05)',
-        strokeDashArray: 4
-      },
-      xaxis: {
-        type: 'datetime',
-        axisBorder: {
-          show: false
         },
-        axisTicks: {
-          show: false
-        }
-      },
-      yaxis: {
-        tickAmount: 5,
-        labels: {
-          formatter: (value) => value.toFixed(1)
-        }
-      },
-      tooltip: {
-        x: {
-          format: 'yyyy-MM-dd'
+        colors: ['#3b82f6'],
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.45,
+            opacityTo: 0.05,
+            stops: [0, 95]
+          }
         },
-        theme: 'dark'
-      }
-    };
+        stroke: { curve: 'smooth', width: 2.5 },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: { formatter: (value) => value.toFixed(1) }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark'
+        }
+      };
 
-    if (charts.vix) {
-      charts.vix.destroy();
+      if (charts.vix) charts.vix.destroy();
+      charts.vix = new ApexCharts(document.querySelector("#vix-chart"), options);
+      charts.vix.render();
     }
-    charts.vix = new ApexCharts(document.querySelector("#vix-chart"), options);
-    charts.vix.render();
+
+    // 2. CNN Fear & Greed Chart & Indicator
+    const fgData = indicators.fear_greed || [];
+    if (fgData.length > 0) {
+      const latestFg = fgData[fgData.length - 1];
+      const currentVal = latestFg.value;
+      
+      const valEl = document.getElementById('fear-greed-current-val');
+      const statusEl = document.getElementById('fear-greed-current-status');
+      
+      if (valEl) valEl.textContent = currentVal.toFixed(1);
+      
+      if (statusEl) {
+        statusEl.className = 'stat-status';
+        if (currentVal < 25) {
+          statusEl.textContent = 'EXTREME FEAR';
+          statusEl.classList.add('status-panic');
+        } else if (currentVal < 45) {
+          statusEl.textContent = 'FEAR';
+          statusEl.classList.add('status-elevated');
+        } else if (currentVal < 55) {
+          statusEl.textContent = 'NEUTRAL';
+          statusEl.classList.add('status-normal');
+        } else if (currentVal < 75) {
+          statusEl.textContent = 'GREED';
+          statusEl.classList.add('status-complacent');
+        } else {
+          statusEl.textContent = 'EXTREME GREED';
+          statusEl.classList.add('status-complacent');
+        }
+      }
+
+      const fgChartSeries = fgData.map(item => [new Date(item.date).getTime(), item.value]);
+      
+      const options = {
+        series: [{
+          name: 'Fear & Greed Index',
+          data: fgChartSeries
+        }],
+        chart: {
+          type: 'area',
+          height: '100%',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: {
+            enabled: true,
+            easing: 'easeinout',
+            speed: 800,
+            animateGradually: { enabled: true, delay: 150 },
+            dynamicAnimation: { enabled: true, speed: 350 }
+          }
+        },
+        colors: ['#f59e0b'],
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.45,
+            opacityTo: 0.05,
+            stops: [0, 95]
+          }
+        },
+        stroke: { curve: 'smooth', width: 2.5 },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          min: 0,
+          max: 100,
+          labels: { formatter: (value) => value.toFixed(0) }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark'
+        },
+        annotations: {
+          yaxis: [
+            {
+              y: 75,
+              borderColor: '#10b981',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#10b981',
+                style: { color: '#fff', background: '#10b981', fontWeight: 600 },
+                text: 'Extreme Greed (75)'
+              }
+            },
+            {
+              y: 25,
+              borderColor: '#ef4444',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#ef4444',
+                style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
+                text: 'Extreme Fear (25)'
+              }
+            }
+          ]
+        }
+      };
+
+      if (charts.fearGreed) charts.fearGreed.destroy();
+      charts.fearGreed = new ApexCharts(document.querySelector("#fear-greed-chart"), options);
+      charts.fearGreed.render();
+    }
+
+    // 3. Insider Buy/Sell Ratio Chart & Indicator
+    const insiderData = indicators.insider_ratio || [];
+    if (insiderData.length > 0) {
+      const latestInsider = insiderData[insiderData.length - 1];
+      const currentVal = latestInsider.value;
+      
+      const valEl = document.getElementById('insider-ratio-current-val');
+      const statusEl = document.getElementById('insider-ratio-current-status');
+      
+      if (valEl) valEl.textContent = currentVal.toFixed(3);
+      
+      if (statusEl) {
+        statusEl.className = 'stat-status';
+        if (currentVal > 0.5) {
+          statusEl.textContent = 'HIGH CONFIDENCE';
+          statusEl.classList.add('status-complacent');
+        } else if (currentVal >= 0.15) {
+          statusEl.textContent = 'NORMAL';
+          statusEl.classList.add('status-normal');
+        } else {
+          statusEl.textContent = 'LOW BUYING';
+          statusEl.classList.add('status-normal');
+        }
+      }
+
+      const insiderChartSeries = insiderData.map(item => [new Date(item.date).getTime(), item.value]);
+      
+      const options = {
+        series: [{
+          name: 'Insider Buy/Sell Ratio',
+          data: insiderChartSeries
+        }],
+        chart: {
+          type: 'area',
+          height: '100%',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: {
+            enabled: true,
+            easing: 'easeinout',
+            speed: 800,
+            animateGradually: { enabled: true, delay: 150 },
+            dynamicAnimation: { enabled: true, speed: 350 }
+          }
+        },
+        colors: ['#10b981'],
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.45,
+            opacityTo: 0.05,
+            stops: [0, 95]
+          }
+        },
+        stroke: { curve: 'smooth', width: 2.5 },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: { formatter: (value) => value.toFixed(2) }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark'
+        },
+        annotations: {
+          yaxis: [
+            {
+              y: 0.5,
+              borderColor: '#10b981',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#10b981',
+                style: { color: '#fff', background: '#10b981', fontWeight: 600 },
+                text: 'High Confidence (0.50)'
+              }
+            }
+          ]
+        }
+      };
+
+      if (charts.insiderRatio) charts.insiderRatio.destroy();
+      charts.insiderRatio = new ApexCharts(document.querySelector("#insider-ratio-chart"), options);
+      charts.insiderRatio.render();
+    }
   }
 
   // Monetary & Liquidity Tab Rendering
