@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: completed
 
 ## Parent
 
@@ -12,13 +12,13 @@ This is the foundational infrastructure slice: later issues (#15, and indirectly
 
 ## Acceptance criteria
 
-- [ ] Python pipeline reads `FRED_API_KEY` from `os.environ.get()`.
-- [ ] When the key is present, FRED series are fetched via the official API endpoint (`https://api.stlouisfed.org/fred/series/observations`).
-- [ ] When the key is absent, the existing keyless CSV scraping path is used unchanged.
-- [ ] When the API key is present but the API returns an error, the pipeline falls back to CSV scraping and logs a warning.
-- [ ] The GitHub Actions workflow passes `FRED_API_KEY` from repository secrets as an environment variable to the Python script.
-- [ ] README documents all three API keys: name, provider, free-tier signup link, and how to add them as GitHub secrets.
-- [ ] Tests verify both the API path and the CSV fallback path produce identical output structure.
+- [x] Python pipeline reads `FRED_API_KEY` from `os.environ.get()`.
+- [x] When the key is present, FRED series are fetched via the official API endpoint (`https://api.stlouisfed.org/fred/series/observations`).
+- [x] When the key is absent, the existing keyless CSV scraping path is used unchanged.
+- [x] When the API key is present but the API returns an error, the pipeline falls back to CSV scraping and logs a warning.
+- [x] The GitHub Actions workflow passes `FRED_API_KEY` from repository secrets as an environment variable to the Python script.
+- [x] README documents all three API keys: name, provider, free-tier signup link, and how to add them as GitHub secrets.
+- [x] Tests verify both the API path and the CSV fallback path produce identical output structure.
 
 ## Blocked by
 

@@ -36,6 +36,8 @@ jobs:
           pip install requests yfinance beautifulsoup4 pandas lxml
 
       - name: Run Data Update Script
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python scripts/update_data.py
 
       - name: Commit and Push Changes

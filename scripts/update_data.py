@@ -55,15 +55,41 @@ def fetch_vix():
 
 def fetch_fred_series(series_id, years=5):
     logger.info(f"Fetching FRED series {series_id}...")
-    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-    df = pd.read_csv(url)
-    
-    if 'observation_date' not in df.columns or series_id not in df.columns:
-        raise ValueError(f"Unexpected columns in FRED CSV for {series_id}: {df.columns}")
+    api_key = os.environ.get("FRED_API_KEY")
+    df = None
+
+    if api_key:
+        try:
+            logger.info(f"Using FRED API for series {series_id}...")
+            url = f"https://api.stlouisfed.org/fred/series/observations?series_id={series_id}&api_key={api_key}&file_type=json"
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+            data = response.json()
+            if 'observations' not in data:
+                raise ValueError(f"No observations in FRED API response for {series_id}")
+            df = pd.DataFrame(data['observations'])
+            if not df.empty:
+                df['date'] = pd.to_datetime(df['date'])
+                df['value'] = pd.to_numeric(df['value'], errors='coerce')
+                df = df.dropna(subset=['value'])
+                df = df.sort_values('date')
+            else:
+                df = pd.DataFrame(columns=['date', 'value'])
+        except Exception as e:
+            logger.warning(f"FRED API fetch failed for series {series_id}, falling back to CSV scraping: {e}")
+            df = None
+
+    if df is None:
+        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+        df = pd.read_csv(url)
         
-    df['date'] = pd.to_datetime(df['observation_date'])
-    df['value'] = pd.to_numeric(df[series_id], errors='coerce')
-    df = df.dropna(subset=['value'])
+        if 'observation_date' not in df.columns or series_id not in df.columns:
+            raise ValueError(f"Unexpected columns in FRED CSV for {series_id}: {df.columns}")
+            
+        df['date'] = pd.to_datetime(df['observation_date'])
+        df['value'] = pd.to_numeric(df[series_id], errors='coerce')
+        df = df.dropna(subset=['value'])
+        df = df.sort_values('date')
     
     # Filter for the last N years
     start_date = datetime.now() - timedelta(days=years * 365)
@@ -81,17 +107,41 @@ def fetch_fred_series(series_id, years=5):
 
 def fetch_m2_growth(years=5):
     logger.info("Fetching M2 Money Supply (M2SL) and computing YoY Growth...")
-    # Fetch 6 years of data to ensure we can compute YoY percentage changes for the full 5-year history
-    url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL"
-    df = pd.read_csv(url)
-    
-    if 'observation_date' not in df.columns or 'M2SL' not in df.columns:
-        raise ValueError(f"Unexpected columns in FRED CSV for M2SL: {df.columns}")
+    api_key = os.environ.get("FRED_API_KEY")
+    df = None
+
+    if api_key:
+        try:
+            logger.info("Using FRED API for M2SL...")
+            url = f"https://api.stlouisfed.org/fred/series/observations?series_id=M2SL&api_key={api_key}&file_type=json"
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+            data = response.json()
+            if 'observations' not in data:
+                raise ValueError("No observations in FRED API response for M2SL")
+            df = pd.DataFrame(data['observations'])
+            if not df.empty:
+                df['date'] = pd.to_datetime(df['date'])
+                df['raw_value'] = pd.to_numeric(df['value'], errors='coerce')
+                df = df.dropna(subset=['raw_value'])
+                df = df.sort_values('date')
+            else:
+                df = pd.DataFrame(columns=['date', 'raw_value'])
+        except Exception as e:
+            logger.warning(f"FRED API fetch failed for M2SL, falling back to CSV scraping: {e}")
+            df = None
+
+    if df is None:
+        url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL"
+        df = pd.read_csv(url)
         
-    df['date'] = pd.to_datetime(df['observation_date'])
-    df['raw_value'] = pd.to_numeric(df['M2SL'], errors='coerce')
-    df = df.dropna(subset=['raw_value'])
-    df = df.sort_values('date')
+        if 'observation_date' not in df.columns or 'M2SL' not in df.columns:
+            raise ValueError(f"Unexpected columns in FRED CSV for M2SL: {df.columns}")
+            
+        df['date'] = pd.to_datetime(df['observation_date'])
+        df['raw_value'] = pd.to_numeric(df['M2SL'], errors='coerce')
+        df = df.dropna(subset=['raw_value'])
+        df = df.sort_values('date')
     
     # YoY percentage change over 12 periods (monthly data, so 12 periods = 1 year)
     df['value'] = df['raw_value'].pct_change(periods=12) * 100
