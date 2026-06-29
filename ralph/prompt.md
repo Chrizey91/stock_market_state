@@ -32,7 +32,8 @@ Explore the repo.
 
 # IMPLEMENTATION
 
-Use /tdd to complete the task.
+Use the `tdd` skill (Test-driven development / red-green-refactor) to complete the task.
+Before starting implementation, you MUST read the skill instructions in `.agents/skills/tdd/SKILL.md` using the `view_file` tool and follow them exactly.
 
 # FEEDBACK LOOPS
 
@@ -43,17 +44,20 @@ Before committing, run the feedback loops:
 
 # COMMIT
 
-Make a git commit. The commit message must:
-
-1. Include key decisions made
-2. Include files changed
-3. Blockers or notes for next iteration
+Stage and commit your changes using the `run_command` tool:
+1. Run `git add <files>` or `git add .` to stage changes.
+2. Run `git commit -m "<message>"` with a message that includes:
+   - Key decisions made
+   - Files changed
+   - Blockers or notes for the next iteration
 
 # THE ISSUE
 
-If the task is complete, move the issue file to `issues/done/`.
+If the task is complete, move the issue file using the `run_command` tool:
+1. Ensure the `issues/done/` directory exists (create it using `mkdir -p issues/done` or powershell equivalent if necessary).
+2. Move the issue file to `issues/done/` using `git mv issues/<filename> issues/done/`.
 
-If the task is not complete, add a note to the issue file with what was done.
+If the task is not complete, add a note to the issue file detailing what was done using a file editing tool (like `replace_file_content`).
 
 # FINAL RULES
 

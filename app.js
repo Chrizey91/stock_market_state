@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateUIHeader(marketData.last_updated);
       renderSentimentTab(marketData.indicators);
       renderMonetaryTab(marketData.indicators);
+      renderEconomyTab(marketData.indicators);
       
     } catch (error) {
       console.error("Error loading market data:", error);
@@ -182,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const yieldCurve = indicators.yield_curve || [];
 
     // Helper to build line charts
-    const buildChartOptions = (containerId, name, dataPoints, color, isSpread = false) => {
+    const buildChartOptions = (containerId, name, dataPoints, color, zeroLineLabel = null) => {
       const chartSeries = dataPoints.map(item => [new Date(item.date).getTime(), item.value]);
       
       const options = {
@@ -236,8 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
 
-      // Add inversion line annotation for 10Y-2Y Treasury spread
-      if (isSpread) {
+      // Add inversion/contraction line annotation if specified
+      if (zeroLineLabel) {
         options.annotations = {
           yaxis: [{
             y: 0,
@@ -251,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 background: '#ef4444',
                 fontWeight: 600
               },
-              text: 'Inversion (0.00%)'
+              text: zeroLineLabel
             }
           }]
         };
@@ -278,10 +279,144 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render Yield Curve Spread Chart
     if (yieldCurve.length > 0) {
-      const opts = buildChartOptions("#t10y2y-chart", "10Y - 2Y Yield Spread", yieldCurve, "#fbbf24", true);
+      const opts = buildChartOptions("#t10y2y-chart", "10Y - 2Y Yield Spread", yieldCurve, "#fbbf24", "Inversion (0.00%)");
       if (charts.yieldCurve) charts.yieldCurve.destroy();
       charts.yieldCurve = new ApexCharts(document.querySelector("#t10y2y-chart"), opts);
       charts.yieldCurve.render();
+    }
+
+    // Render M2 Growth Chart
+    const m2Growth = indicators.m2_growth || [];
+    if (m2Growth.length > 0) {
+      const opts = buildChartOptions("#m2growth-chart", "M2 YoY Growth", m2Growth, "#f43f5e", "Contraction (0.00%)");
+      if (charts.m2Growth) charts.m2Growth.destroy();
+      charts.m2Growth = new ApexCharts(document.querySelector("#m2growth-chart"), opts);
+      charts.m2Growth.render();
+    }
+  }
+
+  // Economy & Internals Tab Rendering
+  function renderEconomyTab(indicators) {
+    const ismPmi = indicators.ism_pmi || [];
+    const highYieldSpread = indicators.high_yield_spread || [];
+
+    // Render ISM Manufacturing PMI Chart
+    if (ismPmi.length > 0) {
+      const pmiSeries = ismPmi.map(item => [new Date(item.date).getTime(), item.value]);
+      const opts = {
+        series: [{
+          name: 'ISM Manufacturing PMI',
+          data: pmiSeries
+        }],
+        chart: {
+          type: 'line',
+          height: '100%',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#a78bfa'],
+        stroke: { curve: 'smooth', width: 2.5 },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: {
+            formatter: (value) => value.toFixed(1)
+          }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark'
+        },
+        annotations: {
+          yaxis: [{
+            y: 50,
+            borderColor: '#fbbf24',
+            strokeDashArray: 4,
+            width: '100%',
+            label: {
+              borderColor: '#fbbf24',
+              style: { color: '#000', background: '#fbbf24', fontWeight: 600 },
+              text: 'Expansion Threshold (50)'
+            }
+          }]
+        }
+      };
+      if (charts.ismPmi) charts.ismPmi.destroy();
+      charts.ismPmi = new ApexCharts(document.querySelector("#ism-pmi-chart"), opts);
+      charts.ismPmi.render();
+    }
+
+    // Render High Yield Credit Spread Chart
+    if (highYieldSpread.length > 0) {
+      const hySeries = highYieldSpread.map(item => [new Date(item.date).getTime(), item.value]);
+      const opts = {
+        series: [{
+          name: 'High Yield Credit Spread',
+          data: hySeries
+        }],
+        chart: {
+          type: 'line',
+          height: '100%',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#f87171'],
+        stroke: { curve: 'smooth', width: 2.5 },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: {
+            formatter: (value) => value.toFixed(2) + '%'
+          }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark'
+        },
+        annotations: {
+          yaxis: [
+            {
+              y: 4.0,
+              borderColor: '#fbbf24',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#fbbf24',
+                style: { color: '#000', background: '#fbbf24', fontWeight: 600 },
+                text: 'Moderate Stress (4.0%)'
+              }
+            },
+            {
+              y: 6.0,
+              borderColor: '#ef4444',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#ef4444',
+                style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
+                text: 'High Stress (6.0%)'
+              }
+            }
+          ]
+        }
+      };
+      if (charts.highYieldSpread) charts.highYieldSpread.destroy();
+      charts.highYieldSpread = new ApexCharts(document.querySelector("#highyield-chart"), opts);
+      charts.highYieldSpread.render();
     }
   }
 

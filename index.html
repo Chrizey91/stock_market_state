@@ -119,7 +119,7 @@
 
         <!-- Monetary & Liquidity Section -->
         <section id="monetary-tab" class="tab-pane">
-          <div class="grid-layout cols-3">
+          <div class="grid-layout cols-2">
             <!-- Fed Funds Rate -->
             <div class="card chart-card">
               <div class="card-header">
@@ -200,19 +200,98 @@
                 <div id="t10y2y-chart" class="chart-container"></div>
               </div>
             </div>
+
+            <!-- M2 Liquidity Growth -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">LIQUIDITY</span>
+                  <h2>M2 Liquidity Growth</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-m2growth">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>M2 Liquidity Growth (YoY %)</h4>
+                      <p>The Year-over-Year percentage change in the M2 Money Supply, which measures the total volume of currency, deposits, and liquid assets in the U.S. economy.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&gt; 0% (Expansionary):</strong> Indicates expanding liquidity, which tends to support consumer spending, business investment, and asset valuations.</li>
+                        <li><strong>&lt; 0% (Contractionary):</strong> Indicates tightening liquidity, which can increase borrowing friction, cool inflation, and pose headwinds to stock market multiples.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="m2growth-chart" class="chart-container"></div>
+              </div>
+            </div>
           </div>
         </section>
 
         <!-- Economy & Internals Section -->
         <section id="economy-tab" class="tab-pane">
-          <div class="card empty-state-card">
-            <div class="empty-state-content">
-              <div class="empty-state-icon">
-                <i data-lucide="database"></i>
+          <div class="grid-layout cols-2">
+            <!-- ISM Manufacturing PMI -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">ECONOMIC ACTIVITY</span>
+                  <h2>ISM Manufacturing PMI</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-ism-pmi">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>ISM Manufacturing PMI (NAPM)</h4>
+                      <p>The Purchasing Managers' Index (PMI) is a survey-based economic indicator tracking monthly changes in industrial activity and output.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&gt; 50 (Expansion):</strong> Indicates manufacturing activity is expanding. High values show strong economic demand.</li>
+                        <li><strong>&lt; 50 (Contraction):</strong> Indicates manufacturing activity is contracting. Readings below 45 signal rising recession risk.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3>Data Stream Pending</h3>
-              <p>Economic indicators (ISM Manufacturing PMI), Credit Spreads (High Yield Credit Spreads), and S&P 500 moving average breadth are scheduled to be integrated in the upcoming development cycles.</p>
-              <div class="badge">SCAFFOLDING READY</div>
+              <div class="card-body">
+                <div id="ism-pmi-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- High Yield Credit Spread -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">CREDIT MARKET RISK</span>
+                  <h2>High Yield Credit Spread</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-highyield">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>High Yield Option-Adjusted Spread</h4>
+                      <p>The yield difference between below-investment-grade (junk) corporate bonds and risk-free Treasury bonds.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&lt; 4.0% (Low Stress):</strong> Indicates stable business conditions, high market confidence, and easy borrowing access.</li>
+                        <li><strong>4.0% - 6.0% (Moderate Stress):</strong> Indicates tightening financial conditions and rising corporate funding pressures.</li>
+                        <li><strong>&gt; 6.0% (High Stress):</strong> Indicates significant credit distress, rising default expectations, and looming economic downturns.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="highyield-chart" class="chart-container"></div>
+              </div>
             </div>
           </div>
         </section>
