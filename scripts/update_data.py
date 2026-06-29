@@ -361,13 +361,42 @@ def fetch_insider_ratio():
     date_str = datetime.now().strftime('%Y-%m-%d')
     return {"date": date_str, "value": round(ratio, 3)}
 
+def fallback_duplicate_last_value(indicator_name, indicator_list, today_str=None):
+    if not today_str:
+        today_str = datetime.now().strftime('%Y-%m-%d')
+    
+    if not indicator_list:
+        logger.warning(f"No historical data available to duplicate for indicator: {indicator_name}")
+        return []
+        
+    last_entry = indicator_list[-1]
+    if last_entry.get("date") == today_str:
+        logger.info(f"Indicator {indicator_name} already has a data point for today {today_str}.")
+        return indicator_list
+        
+    duplicated_entry = {
+        "date": today_str,
+        "value": last_entry["value"]
+    }
+    logger.info(f"Duplicating last value of {indicator_name} ({last_entry['value']}) for today ({today_str})")
+    return indicator_list + [duplicated_entry]
+
 def main():
     existing_data = load_existing_data()
     
-    # Initialize updated structure, retaining existing indicators in case of fetch failure
+    # Deep copy existing indicators to avoid mutation issues
+    existing_indicators = existing_data.get("indicators", {})
+    indicators_copy = {}
+    for key, val in existing_indicators.items():
+        if isinstance(val, list):
+            indicators_copy[key] = [dict(item) for item in val if isinstance(item, dict)]
+        else:
+            indicators_copy[key] = val
+
+    # Initialize updated structure
     updated_data = {
         "last_updated": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
-        "indicators": existing_data.get("indicators", {})
+        "indicators": indicators_copy
     }
     
     # Fetch VIX
@@ -375,9 +404,8 @@ def main():
         updated_data["indicators"]["vix"] = fetch_vix()
     except Exception as e:
         logger.warning(f"Failed to fetch VIX data: {e}")
-        # Keep existing if it exists, otherwise empty list
-        if "vix" not in updated_data["indicators"]:
-            updated_data["indicators"]["vix"] = []
+        vix_list = existing_indicators.get("vix", [])
+        updated_data["indicators"]["vix"] = fallback_duplicate_last_value("vix", vix_list)
             
     # Fetch standard FRED indicators
     fred_configs = {
@@ -392,23 +420,27 @@ def main():
             updated_data["indicators"][key] = fetch_fred_series(series_id, years=5)
         except Exception as e:
             logger.warning(f"Failed to fetch FRED series {series_id} ({key}): {e}")
-            if key not in updated_data["indicators"]:
-                updated_data["indicators"][key] = []
+            fred_list = existing_indicators.get(key, [])
+            updated_data["indicators"][key] = fallback_duplicate_last_value(key, fred_list)
                 
     # Fetch/Compute M2 Liquidity Growth
     try:
         updated_data["indicators"]["m2_growth"] = fetch_m2_growth(years=5)
     except Exception as e:
         logger.warning(f"Failed to fetch/compute M2 Liquidity Growth: {e}")
-        if "m2_growth" not in updated_data["indicators"]:
-            updated_data["indicators"]["m2_growth"] = []
+        m2_list = existing_indicators.get("m2_growth", [])
+        updated_data["indicators"]["m2_growth"] = fallback_duplicate_last_value("m2_growth", m2_list)
 
-    # Fetch ISM Manufacturing PMI (try FRED first, fallback to generated mock data)
+    # Fetch ISM Manufacturing PMI (try FRED first, fallback to generated mock data or duplicate last value)
     try:
         updated_data["indicators"]["ism_pmi"] = fetch_fred_series("NAPM", years=5)
     except Exception as e:
-        logger.warning(f"Failed to fetch FRED series NAPM (ism_pmi): {e}. Using realistic generated fallback.")
-        if "ism_pmi" not in updated_data["indicators"] or not updated_data["indicators"]["ism_pmi"]:
+        logger.warning(f"Failed to fetch FRED series NAPM (ism_pmi): {e}")
+        pmi_list = existing_indicators.get("ism_pmi", [])
+        if pmi_list:
+            updated_data["indicators"]["ism_pmi"] = fallback_duplicate_last_value("ism_pmi", pmi_list)
+        else:
+            logger.warning("No existing ism_pmi data. Using realistic generated fallback.")
             updated_data["indicators"]["ism_pmi"] = generate_mock_ism_pmi(years=5)
 
     # Fetch/Compute S&P 500 Breadth (% of stocks above 200-day SMA)
@@ -416,8 +448,8 @@ def main():
         updated_data["indicators"]["sp500_breadth"] = fetch_sp500_breadth()
     except Exception as e:
         logger.warning(f"Failed to fetch/compute S&P 500 Breadth: {e}")
-        if "sp500_breadth" not in updated_data["indicators"]:
-            updated_data["indicators"]["sp500_breadth"] = []
+        breadth_list = existing_indicators.get("sp500_breadth", [])
+        updated_data["indicators"]["sp500_breadth"] = fallback_duplicate_last_value("sp500_breadth", breadth_list)
 
     # Fetch/Compute CNN Fear & Greed Index
     fear_greed_list = updated_data["indicators"].get("fear_greed", [])
@@ -440,6 +472,8 @@ def main():
         logger.info(f"Successfully updated Fear & Greed Index: {new_fg}")
     except Exception as e:
         logger.warning(f"Failed to fetch/compute CNN Fear & Greed: {e}")
+        # Duplicate last value on failure
+        fear_greed_list = fallback_duplicate_last_value("fear_greed", fear_greed_list)
         
     updated_data["indicators"]["fear_greed"] = fear_greed_list
 
@@ -464,6 +498,8 @@ def main():
         logger.info(f"Successfully updated Insider Buy/Sell Ratio: {new_insider}")
     except Exception as e:
         logger.warning(f"Failed to fetch/compute Insider Buy/Sell Ratio: {e}")
+        # Duplicate last value on failure
+        insider_list = fallback_duplicate_last_value("insider_ratio", insider_list)
         
     updated_data["indicators"]["insider_ratio"] = insider_list
 
@@ -479,7 +515,7 @@ def main():
             logger.warning("Market Regime Index timeline is empty. Setting default score to 50.0")
     except Exception as e:
         logger.error(f"Failed to calculate Market Regime Index: {e}")
-        updated_data["indicators"]["market_regime_index"] = existing_data.get("indicators", {}).get("market_regime_index", [])
+        updated_data["indicators"]["market_regime_index"] = existing_indicators.get("market_regime_index", [])
         updated_data["market_regime_score"] = existing_data.get("market_regime_score", 50.0)
 
     save_data(updated_data)
