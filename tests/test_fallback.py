@@ -22,8 +22,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
     @patch('scripts.update_data.fetch_equal_vs_cap_weight')
+    @patch('scripts.update_data.fetch_sector_data')
     def test_vix_fallback_duplicates_last_value(
         self,
+        mock_fetch_sector,
         mock_fetch_equal_vs_cap,
         mock_fetch_trend,
         mock_fetch_insider,
@@ -56,7 +58,9 @@ class TestDataPipelineFallback(unittest.TestCase):
                 "fear_greed": [{"date": yesterday_str, "value": 45.0}],
                 "insider_ratio": [{"date": yesterday_str, "value": 0.25}],
                 "sp500_trend": [{"date": yesterday_str, "value": 5000.0, "ma50": 4900.0, "ma200": 4800.0}],
-                "equal_vs_cap_weight": [{"date": yesterday_str, "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}]
+                "equal_vs_cap_weight": [{"date": yesterday_str, "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}],
+                "sector_leadership": {"above_200d": 9, "total": 11, "sectors": [{"name": "XLK", "above": True}]},
+                "sector_heatmap": [{"sector": "XLK", "1w": 1.0, "1m": 2.0, "3m": 3.0}]
             }
         }
         
@@ -68,6 +72,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_breadth.return_value = []
         mock_fetch_ad_line.side_effect = ValueError("AD Line fail")
         mock_fetch_new_highs_lows.side_effect = ValueError("Highs/Lows fail")
+        mock_fetch_sector.side_effect = ValueError("Sector API is down")
         mock_fetch_fg.return_value = {"date": today_str, "value": 50.0}
         mock_fetch_insider.return_value = {"date": today_str, "value": 0.3}
 
@@ -134,8 +139,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
     @patch('scripts.update_data.fetch_equal_vs_cap_weight')
+    @patch('scripts.update_data.fetch_sector_data')
     def test_fallback_no_previous_history(
         self,
+        mock_fetch_sector,
         mock_fetch_equal_vs_cap,
         mock_fetch_trend,
         mock_fetch_insider,
@@ -164,6 +171,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_fg.side_effect = ValueError("FG fail")
         mock_fetch_insider.side_effect = ValueError("Insider fail")
 
+        mock_fetch_sector.side_effect = ValueError("Sector fail")
         # Run main script
         main()
 
@@ -187,6 +195,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(saved_data["indicators"]["sp500_ad_line"], [])
         self.assertEqual(saved_data["indicators"]["sp500_new_highs_lows"], [])
         self.assertEqual(saved_data["indicators"]["equal_vs_cap_weight"], [])
+        self.assertEqual(saved_data["indicators"]["sector_leadership"], {"above_200d": 0, "total": 11, "sectors": []})
+        self.assertEqual(saved_data["indicators"]["sector_heatmap"], [])
 
     @patch('scripts.update_data.load_existing_data')
     @patch('scripts.update_data.save_data')
@@ -200,8 +210,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_insider_ratio')
     @patch('scripts.update_data.fetch_sp500_trend')
     @patch('scripts.update_data.fetch_equal_vs_cap_weight')
+    @patch('scripts.update_data.fetch_sector_data')
     def test_initialization_creates_new_file(
         self,
+        mock_fetch_sector,
         mock_fetch_equal_vs_cap,
         mock_fetch_trend,
         mock_fetch_insider,
@@ -223,6 +235,10 @@ class TestDataPipelineFallback(unittest.TestCase):
         mock_fetch_vix.return_value = [{"date": today_str, "value": 14.5}]
         mock_fetch_trend.return_value = [{"date": today_str, "value": 5200.0, "ma50": 5100.0, "ma200": 5000.0}]
         mock_fetch_equal_vs_cap.return_value = [{"date": today_str, "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}]
+        mock_fetch_sector.return_value = (
+            {"above_200d": 9, "total": 11, "sectors": [{"name": "XLK", "above": True}]},
+            [{"sector": "XLK", "1w": 1.0, "1m": 2.0, "3m": 3.0}]
+        )
         mock_fetch_fred.return_value = [{"date": today_str, "value": 4.5}]
         mock_fetch_m2.return_value = [{"date": today_str, "value": 2.0}]
         mock_fetch_breadth.return_value = [{"date": today_str, "value": 70.0}]
@@ -248,6 +264,8 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(saved_data["indicators"]["sp500_ad_line"], [{"date": today_str, "value": 150}])
         self.assertEqual(saved_data["indicators"]["sp500_new_highs_lows"], [{"date": today_str, "highs": 25, "lows": 5}])
         self.assertEqual(saved_data["indicators"]["equal_vs_cap_weight"], [{"date": today_str, "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}])
+        self.assertEqual(saved_data["indicators"]["sector_leadership"], {"above_200d": 9, "total": 11, "sectors": [{"name": "XLK", "above": True}]})
+        self.assertEqual(saved_data["indicators"]["sector_heatmap"], [{"sector": "XLK", "1w": 1.0, "1m": 2.0, "3m": 3.0}])
         # F&G / Insider should contain history + today's value
         self.assertEqual(saved_data["indicators"]["fear_greed"][-1], {"date": today_str, "value": 55.0})
         self.assertEqual(saved_data["indicators"]["insider_ratio"][-1], {"date": today_str, "value": 0.35})

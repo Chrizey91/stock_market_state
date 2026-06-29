@@ -577,6 +577,64 @@
                 <div id="sp500-highs-lows-chart" class="chart-container"></div>
               </div>
             </div>
+
+            <!-- Sector MA Breadth -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">MARKET BREADTH</span>
+                  <h2>Sector MA Breadth</h2>
+                  <p id="sector-breadth-summary" class="card-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Loading sector breadth...</p>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sector-breadth">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Sector MA Breadth</h4>
+                      <p>Measures how many of the 11 SPDR sector ETFs are trading above their 200-day moving average. Broad participation indicates a healthy market regime.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&gt;= 8 Sectors (Broad Leadership):</strong> Bullish. Broad participation across cyclical and defensive sectors.</li>
+                        <li><strong>5 - 7 Sectors (Mixed):</strong> Neutral. Select sectors leading, rotation active.</li>
+                        <li><strong>&lt; 5 Sectors (Narrow Leadership):</strong> Bearish/Warning. High concentration or broad market weakness.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body" style="height: 320px;">
+                <div id="sector-leadership-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- Sector Performance Heatmap -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">MARKET BREADTH</span>
+                  <h2>Sector Performance Heatmap</h2>
+                  <p class="card-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">1-Week, 1-Month, and 3-Month sector returns</p>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sector-heatmap">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Sector Performance Heatmap</h4>
+                      <p>Displays the returns of the 11 SPDR sector ETFs across 1-week, 1-month, and 3-month windows to identify sector rotation and momentum trends.</p>
+                      <hr>
+                      <p>Useful for detecting rotation from defensive sectors (e.g. XLU, XLP, XLV) to cyclical sectors (e.g. XLK, XLY, XLI) or vice versa.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body" style="height: 320px;">
+                <div id="sector-heatmap-chart" class="chart-container"></div>
+              </div>
+            </div>
           </div>
         </section>
       </div>

@@ -146,5 +146,60 @@ class TestMarketBreadth(unittest.TestCase):
         self.assertEqual(latest["lows"], 1)
         self.assertEqual(latest["date"], dates[-1].strftime('%Y-%m-%d'))
 
+    @patch('scripts.update_data.yf.download')
+    def test_fetch_sector_data(self, mock_yf_download):
+        # We need 250 days of data for the 11 sectors
+        sectors = ['XLK', 'XLF', 'XLI', 'XLV', 'XLY', 'XLP', 'XLE', 'XLU', 'XLC', 'XLRE', 'XLB']
+        columns = pd.MultiIndex.from_product([['Close'], sectors])
+        dates = pd.date_range(end="2026-06-29", periods=250, freq='B')
+        
+        # Make one sector XLK rise steadily (so it's above 200 SMA)
+        # Make one sector XLF fall steadily (so it's below 200 SMA)
+        # Make all other 9 sectors rise steadily (so they are above 200 SMA)
+        # So we have 10 sectors above 200 SMA, 1 sector below
+        data_values = np.zeros((250, 11))
+        # XLK (index 0) - rises
+        data_values[:, 0] = np.linspace(100, 200, 250)
+        # XLF (index 1) - falls
+        data_values[:, 1] = np.linspace(200, 100, 250)
+        # Others (index 2 to 10) - rise
+        for i in range(2, 11):
+            data_values[:, i] = np.linspace(100, 200, 250)
+            
+        mock_df = pd.DataFrame(data_values, index=dates, columns=columns)
+        mock_yf_download.return_value = mock_df
+        
+        from scripts.update_data import fetch_sector_data
+        
+        sector_leadership, sector_heatmap = fetch_sector_data()
+        
+        # Verify yf.download was called correctly
+        mock_yf_download.assert_called_once_with(sectors, period='2y', interval='1d', progress=False)
+        
+        # Verify sector_leadership
+        self.assertEqual(sector_leadership["above_200d"], 10)
+        self.assertEqual(sector_leadership["total"], 11)
+        # XLK should be above
+        self.assertTrue(next(s["above"] for s in sector_leadership["sectors"] if s["name"] == "XLK"))
+        # XLF should not be above
+        self.assertFalse(next(s["above"] for s in sector_leadership["sectors"] if s["name"] == "XLF"))
+        
+        # Verify sector_heatmap
+        self.assertEqual(len(sector_heatmap), 11)
+        # Verify return calculation for XLK (rises from 100 to 200, so recent returns are positive)
+        xlk_heat = next(s for s in sector_heatmap if s["sector"] == "XLK")
+        self.assertIn("1w", xlk_heat)
+        self.assertIn("1m", xlk_heat)
+        self.assertIn("3m", xlk_heat)
+        self.assertTrue(xlk_heat["1w"] > 0)
+        self.assertTrue(xlk_heat["1m"] > 0)
+        self.assertTrue(xlk_heat["3m"] > 0)
+        
+        # Verify return calculation for XLF (falls from 200 to 100, so recent returns are negative)
+        xlf_heat = next(s for s in sector_heatmap if s["sector"] == "XLF")
+        self.assertTrue(xlf_heat["1w"] < 0)
+        self.assertTrue(xlf_heat["1m"] < 0)
+        self.assertTrue(xlf_heat["3m"] < 0)
+
 if __name__ == '__main__':
     unittest.main()

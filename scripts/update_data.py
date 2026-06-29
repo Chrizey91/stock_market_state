@@ -566,6 +566,68 @@ def fetch_equal_vs_cap_weight():
     data_points.sort(key=lambda x: x['date'])
     return data_points
 
+def fetch_sector_data():
+    logger.info("Fetching 11 SPDR sector ETFs data...")
+    sectors = ['XLK', 'XLF', 'XLI', 'XLV', 'XLY', 'XLP', 'XLE', 'XLU', 'XLC', 'XLRE', 'XLB']
+    
+    # Download 2 years of daily data to be safe for 200d MA and returns
+    data = yf.download(sectors, period='2y', interval='1d', progress=False)
+    if data.empty or 'Close' not in data.columns:
+        raise ValueError("Sector ETFs data is empty or missing Close column")
+        
+    df_close = data['Close'].dropna(how='all')
+    df_close = df_close.sort_index()
+    
+    # Calculate Sector MA Breadth (above 200-day MA)
+    sma200 = df_close.rolling(window=200, min_periods=200).mean()
+    
+    latest_prices = df_close.iloc[-1]
+    latest_sma200 = sma200.iloc[-1]
+    
+    sectors_above = []
+    above_count = 0
+    
+    for s in sectors:
+        if s in latest_prices.index and s in latest_sma200.index:
+            price = latest_prices[s]
+            sma = latest_sma200[s]
+            
+            if pd.notna(price) and pd.notna(sma):
+                above = bool(price > sma)
+                if above:
+                    above_count += 1
+                sectors_above.append({"name": s, "above": above})
+            else:
+                sectors_above.append({"name": s, "above": False})
+        else:
+            sectors_above.append({"name": s, "above": False})
+            
+    sector_leadership = {
+        "above_200d": above_count,
+        "total": len(sectors),
+        "sectors": sectors_above
+    }
+    
+    # Calculate Sector Performance Heatmap (1w, 1m, 3m returns)
+    pct_1w = df_close.pct_change(5).iloc[-1] * 100
+    pct_1m = df_close.pct_change(21).iloc[-1] * 100
+    pct_3m = df_close.pct_change(63).iloc[-1] * 100
+    
+    sector_heatmap = []
+    for s in sectors:
+        val_1w = pct_1w.get(s) if s in pct_1w.index else None
+        val_1m = pct_1m.get(s) if s in pct_1m.index else None
+        val_3m = pct_3m.get(s) if s in pct_3m.index else None
+        
+        sector_heatmap.append({
+            "sector": s,
+            "1w": round(float(val_1w), 2) if val_1w is not None and pd.notna(val_1w) else None,
+            "1m": round(float(val_1m), 2) if val_1m is not None and pd.notna(val_1m) else None,
+            "3m": round(float(val_3m), 2) if val_3m is not None and pd.notna(val_3m) else None
+        })
+        
+    return sector_leadership, sector_heatmap
+
 def calculate_slope(y_values):
     if len(y_values) < 2:
         return 0.0
@@ -784,13 +846,23 @@ def evaluate_scorecard(indicators):
         "value": display_val
     })
     
-    # 12. sector_leadership (unimplemented)
+    # 12. sector_leadership
+    sector_lead_data = indicators.get("sector_leadership", {})
+    if sector_lead_data and "above_200d" in sector_lead_data and "total" in sector_lead_data:
+        above_count = sector_lead_data["above_200d"]
+        total_count = sector_lead_data["total"]
+        status = "healthy" if above_count >= 8 else "unhealthy"
+        display_val = f"{above_count}/{total_count}"
+    else:
+        status = "unavailable"
+        display_val = None
+        
     scorecard.append({
         "id": "sector_leadership",
         "label": "Sector MA Breadth",
         "category": "Leadership",
-        "status": "unavailable",
-        "value": None
+        "status": status,
+        "value": display_val
     })
     
     # Calculate health_score and health_total
@@ -930,6 +1002,17 @@ def main():
                 updated_data["indicators"]["sp500_new_highs_lows"] = highs_lows_list + [new_hl]
         else:
             updated_data["indicators"]["sp500_new_highs_lows"] = []
+
+    # Fetch Sector ETFs leadership and performance heatmap
+    try:
+        sector_leadership, sector_heatmap = fetch_sector_data()
+        updated_data["indicators"]["sector_leadership"] = sector_leadership
+        updated_data["indicators"]["sector_heatmap"] = sector_heatmap
+        logger.info("Successfully fetched sector ETFs leadership and heatmap data")
+    except Exception as e:
+        logger.warning(f"Failed to fetch/compute Sector ETFs data: {e}")
+        updated_data["indicators"]["sector_leadership"] = existing_indicators.get("sector_leadership", {"above_200d": 0, "total": 11, "sectors": []})
+        updated_data["indicators"]["sector_heatmap"] = existing_indicators.get("sector_heatmap", [])
 
     # Fetch/Compute CNN Fear & Greed Index
     fear_greed_list = updated_data["indicators"].get("fear_greed", [])

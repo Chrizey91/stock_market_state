@@ -1017,6 +1017,174 @@ document.addEventListener('DOMContentLoaded', () => {
       charts.sp500HighsLows = new ApexCharts(document.querySelector("#sp500-highs-lows-chart"), opts);
       charts.sp500HighsLows.render();
     }
+
+    // Render Sector MA Breadth Chart
+    const sectorLead = indicators.sector_leadership || {};
+    const sectors = sectorLead.sectors || [];
+    if (sectors.length > 0) {
+      const summaryEl = document.getElementById('sector-breadth-summary');
+      if (summaryEl) {
+        summaryEl.textContent = `${sectorLead.above_200d} of ${sectorLead.total} sectors above 200-day MA`;
+      }
+
+      const categories = sectors.map(s => s.name);
+      const data = sectors.map(s => s.above ? 1 : -1);
+
+      const opts = {
+        series: [{
+          name: 'Status',
+          data: data
+        }],
+        chart: {
+          type: 'bar',
+          height: 300,
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false }
+        },
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            barHeight: '75%',
+            colors: {
+              ranges: [
+                { from: -1, to: -1, color: '#ef4444' }, // Red for Below
+                { from: 1, to: 1, color: '#10b981' }   // Green for Above
+              ]
+            }
+          }
+        },
+        dataLabels: {
+          enabled: true,
+          formatter: (val) => val === 1 ? 'ABOVE' : 'BELOW',
+          style: {
+            colors: ['#fff'],
+            fontSize: '10px',
+            fontWeight: 'bold'
+          }
+        },
+        grid: {
+          borderColor: 'rgba(255, 255, 255, 0.05)',
+          strokeDashArray: 4,
+          xaxis: { lines: { show: false } }
+        },
+        xaxis: {
+          categories: categories,
+          labels: { show: false },
+          axisBorder: { show: false },
+          axisTicks: { show: false },
+          min: -1.2,
+          max: 1.2
+        },
+        yaxis: {
+          labels: {
+            style: {
+              colors: '#a1a1aa',
+              fontSize: '12px',
+              fontWeight: 600
+            }
+          }
+        },
+        tooltip: {
+          theme: 'dark',
+          y: {
+            formatter: (val) => val === 1 ? 'Above 200-day MA' : 'Below 200-day MA'
+          }
+        }
+      };
+
+      if (charts.sectorLeadership) charts.sectorLeadership.destroy();
+      charts.sectorLeadership = new ApexCharts(document.querySelector("#sector-leadership-chart"), opts);
+      charts.sectorLeadership.render();
+    }
+
+    // Render Sector Performance Heatmap
+    const sectorHeatmap = indicators.sector_heatmap || [];
+    if (sectorHeatmap.length > 0) {
+      const series = [
+        {
+          name: '3-Month',
+          data: sectorHeatmap.map(item => ({ x: item.sector, y: item['3m'] }))
+        },
+        {
+          name: '1-Month',
+          data: sectorHeatmap.map(item => ({ x: item.sector, y: item['1m'] }))
+        },
+        {
+          name: '1-Week',
+          data: sectorHeatmap.map(item => ({ x: item.sector, y: item['1w'] }))
+        }
+      ];
+
+      const opts = {
+        series: series,
+        chart: {
+          type: 'heatmap',
+          height: 300,
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false }
+        },
+        dataLabels: {
+          enabled: true,
+          style: {
+            colors: ['#fff'],
+            fontSize: '11px',
+            fontWeight: 'bold'
+          },
+          formatter: (val) => val !== null ? (val > 0 ? '+' : '') + val.toFixed(1) + '%' : ''
+        },
+        plotOptions: {
+          heatmap: {
+            shadeIntensity: 0.5,
+            radius: 4,
+            useDirectColors: false,
+            colorScale: {
+              ranges: [
+                { from: -100, to: -5, name: 'Very Weak (<-5%)', color: '#991b1b' },
+                { from: -5, to: -2, name: 'Weak (-5% to -2%)', color: '#ef4444' },
+                { from: -2, to: -0.001, name: 'Slightly Weak (-2% to 0%)', color: '#f87171' },
+                { from: 0, to: 0, name: 'Flat', color: '#27272a' },
+                { from: 0.001, to: 2, name: 'Slightly Strong (0% to 2%)', color: '#10b981' },
+                { from: 2, to: 5, name: 'Strong (2% to 5%)', color: '#059669' },
+                { from: 5, to: 100, name: 'Very Strong (>5%)', color: '#065f46' }
+              ]
+            }
+          }
+        },
+        grid: {
+          show: false
+        },
+        xaxis: {
+          labels: {
+            style: {
+              colors: '#a1a1aa',
+              fontSize: '11px',
+              fontWeight: 600
+            }
+          }
+        },
+        yaxis: {
+          labels: {
+            style: {
+              colors: '#a1a1aa',
+              fontSize: '12px',
+              fontWeight: 600
+            }
+          }
+        },
+        tooltip: {
+          theme: 'dark',
+          y: {
+            formatter: (val) => val !== null ? val.toFixed(2) + '%' : 'N/A'
+          }
+        }
+      };
+
+      if (charts.sectorHeatmap) charts.sectorHeatmap.destroy();
+      charts.sectorHeatmap = new ApexCharts(document.querySelector("#sector-heatmap-chart"), opts);
+      charts.sectorHeatmap.render();
+    }
   }
 
   // Hero Section Rendering (Market Regime Score & Sidebar Summary)
