@@ -116,7 +116,11 @@
 
       <!-- Navigation Tabs -->
       <nav class="tab-navigation">
-        <button class="tab-btn active" data-tab="sentiment" id="tab-btn-sentiment">
+        <button class="tab-btn active" data-tab="price-trend" id="tab-btn-price-trend">
+          <i data-lucide="trending-up"></i>
+          <span>Price & Trend</span>
+        </button>
+        <button class="tab-btn" data-tab="sentiment" id="tab-btn-sentiment">
           <i data-lucide="compass"></i>
           <span>Sentiment & Volatility</span>
         </button>
@@ -132,8 +136,48 @@
 
       <!-- Tab Content Area -->
       <div class="tab-content">
+        <!-- Price & Trend Section -->
+        <section id="price-trend-tab" class="tab-pane active">
+          <div class="grid-layout cols-1">
+            <!-- S&P 500 Price & Trend Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">PRICE & TREND</span>
+                  <h2>S&P 500 Price & Moving Averages</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="sp500-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="sp500-trend-status" class="stat-status">LOADING</span>
+                    <span id="sp500-momentum-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-trend">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>About S&P 500 Price & Trend</h4>
+                      <p>This chart displays the daily closing price of the S&P 500 index alongside its 50-day and 200-day simple moving averages (SMAs). These indicators help identify the prevailing long-term trend and momentum of the market.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>200-day SMA (Long-Term Trend):</strong> Regarded as the boundary between a bull and bear market. When the index is above the 200-day SMA, the long-term trend is bullish; when below, it is bearish.</li>
+                        <li><strong>Golden Cross (Bullish Momentum):</strong> Occurs when the shorter-term 50-day SMA crosses above the longer-term 200-day SMA. Signals strong upward momentum.</li>
+                        <li><strong>Death Cross (Bearish Momentum):</strong> Occurs when the 50-day SMA crosses below the 200-day SMA. Signals potential long-term downward momentum.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="sp500-trend-chart" class="chart-container" style="height: 400px;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Sentiment & Volatility Section -->
-        <section id="sentiment-tab" class="tab-pane active">
+        <section id="sentiment-tab" class="tab-pane">
           <div class="grid-layout cols-3">
             <!-- CBOE Volatility Index (VIX) -->
             <div class="card chart-card">

@@ -18,8 +18,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_sp500_breadth')
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
+    @patch('scripts.update_data.fetch_sp500_trend')
     def test_vix_fallback_duplicates_last_value(
         self,
+        mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
         mock_fetch_breadth,
@@ -44,12 +46,14 @@ class TestDataPipelineFallback(unittest.TestCase):
                 "m2_growth": [{"date": yesterday_str, "value": 1.5}],
                 "sp500_breadth": [{"date": yesterday_str, "value": 65.0}],
                 "fear_greed": [{"date": yesterday_str, "value": 45.0}],
-                "insider_ratio": [{"date": yesterday_str, "value": 0.25}]
+                "insider_ratio": [{"date": yesterday_str, "value": 0.25}],
+                "sp500_trend": [{"date": yesterday_str, "value": 5000.0, "ma50": 4900.0, "ma200": 4800.0}]
             }
         }
         
         # VIX fetch fails, others succeed
         mock_fetch_vix.side_effect = ValueError("VIX API is down")
+        mock_fetch_trend.side_effect = ValueError("Trend API is down")
         mock_fetch_fred.return_value = []
         mock_fetch_m2.return_value = []
         mock_fetch_breadth.return_value = []
@@ -71,6 +75,14 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(vix_series[1]["date"], today_str)
         self.assertEqual(vix_series[1]["value"], 15.0)
 
+        # Check that trend was duplicated too
+        trend_series = saved_data["indicators"]["sp500_trend"]
+        self.assertEqual(len(trend_series), 2)
+        self.assertEqual(trend_series[0]["date"], yesterday_str)
+        self.assertEqual(trend_series[0]["value"], 5000.0)
+        self.assertEqual(trend_series[1]["date"], today_str)
+        self.assertEqual(trend_series[1]["value"], 5000.0)
+
     @patch('scripts.update_data.load_existing_data')
     @patch('scripts.update_data.save_data')
     @patch('scripts.update_data.fetch_vix')
@@ -79,8 +91,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_sp500_breadth')
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
+    @patch('scripts.update_data.fetch_sp500_trend')
     def test_fallback_no_previous_history(
         self,
+        mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
         mock_fetch_breadth,
@@ -95,6 +109,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         
         # All fetches fail
         mock_fetch_vix.side_effect = ValueError("VIX fail")
+        mock_fetch_trend.side_effect = ValueError("Trend fail")
         mock_fetch_fred.side_effect = ValueError("FRED fail")
         mock_fetch_m2.side_effect = ValueError("M2 fail")
         mock_fetch_breadth.side_effect = ValueError("Breadth fail")
@@ -120,6 +135,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         # Others with no generators should be empty lists (and shouldn't crash the script)
         self.assertEqual(saved_data["indicators"]["vix"], [])
         self.assertEqual(saved_data["indicators"]["fed_funds"], [])
+        self.assertEqual(saved_data["indicators"]["sp500_trend"], [])
 
     @patch('scripts.update_data.load_existing_data')
     @patch('scripts.update_data.save_data')
@@ -129,8 +145,10 @@ class TestDataPipelineFallback(unittest.TestCase):
     @patch('scripts.update_data.fetch_sp500_breadth')
     @patch('scripts.update_data.fetch_cnn_fear_greed')
     @patch('scripts.update_data.fetch_insider_ratio')
+    @patch('scripts.update_data.fetch_sp500_trend')
     def test_initialization_creates_new_file(
         self,
+        mock_fetch_trend,
         mock_fetch_insider,
         mock_fetch_fg,
         mock_fetch_breadth,
@@ -146,6 +164,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         
         # All fetches succeed
         mock_fetch_vix.return_value = [{"date": today_str, "value": 14.5}]
+        mock_fetch_trend.return_value = [{"date": today_str, "value": 5200.0, "ma50": 5100.0, "ma200": 5000.0}]
         mock_fetch_fred.return_value = [{"date": today_str, "value": 4.5}]
         mock_fetch_m2.return_value = [{"date": today_str, "value": 2.0}]
         mock_fetch_breadth.return_value = [{"date": today_str, "value": 70.0}]
@@ -161,6 +180,7 @@ class TestDataPipelineFallback(unittest.TestCase):
         
         # Check components are populated
         self.assertEqual(saved_data["indicators"]["vix"], [{"date": today_str, "value": 14.5}])
+        self.assertEqual(saved_data["indicators"]["sp500_trend"], [{"date": today_str, "value": 5200.0, "ma50": 5100.0, "ma200": 5000.0}])
         self.assertEqual(saved_data["indicators"]["fed_funds"], [{"date": today_str, "value": 4.5}])
         self.assertEqual(saved_data["indicators"]["yield_curve"], [{"date": today_str, "value": 4.5}])
         self.assertEqual(saved_data["indicators"]["m2_growth"], [{"date": today_str, "value": 2.0}])

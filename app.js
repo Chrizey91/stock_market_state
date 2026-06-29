@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       updateUIHeader(marketData.last_updated);
       renderHeroSection(marketData);
+      renderPriceTrendTab(marketData.indicators);
       renderSentimentTab(marketData.indicators);
       renderMonetaryTab(marketData.indicators);
       renderEconomyTab(marketData.indicators);
@@ -62,6 +63,127 @@ document.addEventListener('DOMContentLoaded', () => {
       // Format as "YYYY-MM-DD HH:MM UTC"
       const formattedDate = date.toISOString().replace('T', ' ').substring(0, 16) + ' UTC';
       timeEl.textContent = `UPDATED: ${formattedDate}`;
+    }
+  }
+
+  // Price & Trend Tab Rendering
+  function renderPriceTrendTab(indicators) {
+    const trendData = indicators.sp500_trend || [];
+    if (trendData.length > 0) {
+      const latest = trendData[trendData.length - 1];
+      const currentVal = latest.value;
+      const ma50 = latest.ma50;
+      const ma200 = latest.ma200;
+      
+      const valEl = document.getElementById('sp500-current-val');
+      const trendStatusEl = document.getElementById('sp500-trend-status');
+      const momentumStatusEl = document.getElementById('sp500-momentum-status');
+      
+      if (valEl) valEl.textContent = currentVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      
+      if (trendStatusEl) {
+        trendStatusEl.className = 'stat-status';
+        if (currentVal > ma200) {
+          trendStatusEl.textContent = 'ABOVE 200-DAY SMA (BULLISH)';
+          trendStatusEl.classList.add('status-complacent');
+        } else {
+          trendStatusEl.textContent = 'BELOW 200-DAY SMA (BEARISH)';
+          trendStatusEl.classList.add('status-panic');
+        }
+      }
+      
+      if (momentumStatusEl) {
+        momentumStatusEl.className = 'stat-status';
+        if (ma50 > ma200) {
+          momentumStatusEl.textContent = 'GOLDEN CROSS';
+          momentumStatusEl.classList.add('status-complacent');
+        } else {
+          momentumStatusEl.textContent = 'DEATH CROSS';
+          momentumStatusEl.classList.add('status-panic');
+        }
+      }
+
+      const closeSeries = trendData.map(item => [new Date(item.date).getTime(), item.value]);
+      const ma50Series = trendData.map(item => [new Date(item.date).getTime(), item.ma50]);
+      const ma200Series = trendData.map(item => [new Date(item.date).getTime(), item.ma200]);
+      
+      const options = {
+        series: [
+          {
+            name: 'S&P 500 Close',
+            type: 'area',
+            data: closeSeries
+          },
+          {
+            name: '50-day SMA',
+            type: 'line',
+            data: ma50Series
+          },
+          {
+            name: '200-day SMA',
+            type: 'line',
+            data: ma200Series
+          }
+        ],
+        chart: {
+          height: 450,
+          type: 'line',
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: {
+            enabled: true,
+            easing: 'easeinout',
+            speed: 800
+          }
+        },
+        colors: ['#3b82f6', '#f59e0b', '#ef4444'], // Blue close, Yellow 50 SMA, Red 200 SMA
+        fill: {
+          type: ['gradient', 'solid', 'solid'],
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.2,
+            opacityTo: 0.0,
+            stops: [0, 90]
+          }
+        },
+        stroke: {
+          width: [3, 2, 2],
+          curve: 'smooth'
+        },
+        grid: {
+          borderColor: 'rgba(255, 255, 255, 0.05)',
+          strokeDashArray: 4
+        },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 6,
+          labels: {
+            formatter: (value) => value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+          }
+        },
+        legend: {
+          show: true,
+          position: 'top',
+          horizontalAlign: 'right',
+          labels: { colors: '#a1a1aa' }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark',
+          y: {
+            formatter: (value) => value !== null ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'
+          }
+        }
+      };
+
+      if (charts.sp500Trend) charts.sp500Trend.destroy();
+      charts.sp500Trend = new ApexCharts(document.querySelector("#sp500-trend-chart"), options);
+      charts.sp500Trend.render();
     }
   }
 

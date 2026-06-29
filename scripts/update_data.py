@@ -431,6 +431,237 @@ def fallback_duplicate_last_value(indicator_name, indicator_list, today_str=None
     logger.info(f"Duplicating last value of {indicator_name} ({last_entry['value']}) for today ({today_str})")
     return indicator_list + [duplicated_entry]
 
+def fetch_sp500_trend():
+    logger.info("Fetching S&P 500 trend data...")
+    ticker = yf.Ticker('^GSPC')
+    # Fetch 2 years to have enough data to calculate 200-day SMA for the last 1 year
+    df = ticker.history(period='2y')
+    if df.empty:
+        raise ValueError("S&P 500 (^GSPC) data is empty")
+    
+    df = df.dropna(subset=['Close'])
+    # Compute 50-day and 200-day SMAs
+    df['ma50'] = df['Close'].rolling(window=50).mean()
+    df['ma200'] = df['Close'].rolling(window=200).mean()
+    
+    # Filter to the last 1 year (365 calendar days)
+    start_date = datetime.now(timezone.utc) - timedelta(days=365)
+    if df.index.tz is not None:
+        df = df[df.index >= start_date]
+    else:
+        df = df[df.index >= start_date.replace(tzinfo=None)]
+        
+    data_points = []
+    for date_val, row in df.iterrows():
+        date_str = date_val.strftime('%Y-%m-%d')
+        ma50_val = row['ma50']
+        ma200_val = row['ma200']
+        data_points.append({
+            "date": date_str,
+            "value": round(float(row['Close']), 2),
+            "ma50": round(float(ma50_val), 2) if pd.notna(ma50_val) else None,
+            "ma200": round(float(ma200_val), 2) if pd.notna(ma200_val) else None
+        })
+        
+    data_points.sort(key=lambda x: x['date'])
+    return data_points
+
+def evaluate_scorecard(indicators):
+    scorecard = []
+    
+    # 1. sp500_trend
+    sp500_trend_data = indicators.get("sp500_trend", [])
+    if sp500_trend_data:
+        latest = sp500_trend_data[-1]
+        val = latest.get("value")
+        ma200 = latest.get("ma200")
+        if val is not None and ma200 is not None:
+            status = "healthy" if val > ma200 else "unhealthy"
+            display_val = "Above" if val > ma200 else "Below"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
+    scorecard.append({
+        "id": "sp500_trend",
+        "label": "S&P 500 vs 200-day MA",
+        "category": "Trend",
+        "status": status,
+        "value": display_val
+    })
+    
+    # 2. sp500_momentum
+    if sp500_trend_data:
+        latest = sp500_trend_data[-1]
+        ma50 = latest.get("ma50")
+        ma200 = latest.get("ma200")
+        if ma50 is not None and ma200 is not None:
+            status = "healthy" if ma50 > ma200 else "unhealthy"
+            display_val = "Golden Cross" if ma50 > ma200 else "Death Cross"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
+    scorecard.append({
+        "id": "sp500_momentum",
+        "label": "50-day vs 200-day MA",
+        "category": "Momentum",
+        "status": status,
+        "value": display_val
+    })
+    
+    # 3. sp500_breadth
+    breadth_data = indicators.get("sp500_breadth", [])
+    if breadth_data:
+        latest = breadth_data[-1]
+        val = latest.get("value")
+        if val is not None:
+            status = "healthy" if val > 70 else "unhealthy"
+            display_val = f"{val:.1f}%"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
+    scorecard.append({
+        "id": "sp500_breadth",
+        "label": "% above 200-day MA",
+        "category": "Breadth",
+        "status": status,
+        "value": display_val
+    })
+    
+    # 4. sp500_ad_line (unimplemented)
+    scorecard.append({
+        "id": "sp500_ad_line",
+        "label": "S&P 500 A/D Line",
+        "category": "Breadth",
+        "status": "unavailable",
+        "value": None
+    })
+    
+    # 5. equal_vs_cap_weight (unimplemented)
+    scorecard.append({
+        "id": "equal_vs_cap_weight",
+        "label": "Equal-Weight vs Cap-Weight",
+        "category": "Breadth",
+        "status": "unavailable",
+        "value": None
+    })
+    
+    # 6. eps_growth (unimplemented)
+    scorecard.append({
+        "id": "eps_growth",
+        "label": "S&P 500 EPS Growth",
+        "category": "Earnings",
+        "status": "unavailable",
+        "value": None
+    })
+    
+    # 7. revenue_growth (unimplemented)
+    scorecard.append({
+        "id": "revenue_growth",
+        "label": "S&P 500 Revenue Growth",
+        "category": "Earnings",
+        "status": "unavailable",
+        "value": None
+    })
+    
+    # 8. forward_pe (unimplemented)
+    scorecard.append({
+        "id": "forward_pe",
+        "label": "Forward P/E",
+        "category": "Valuation",
+        "status": "unavailable",
+        "value": None
+    })
+    
+    # 9. vix
+    vix_data = indicators.get("vix", [])
+    if vix_data:
+        latest = vix_data[-1]
+        val = latest.get("value")
+        if val is not None:
+            status = "healthy" if val <= 20 else "unhealthy"
+            display_val = round(float(val), 2)
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
+    scorecard.append({
+        "id": "vix",
+        "label": "VIX",
+        "category": "Volatility",
+        "status": status,
+        "value": display_val
+    })
+    
+    # 10. hy_spread
+    hy_data = indicators.get("high_yield_spread", [])
+    if hy_data:
+        latest = hy_data[-1]
+        val = latest.get("value")
+        if val is not None:
+            status = "healthy" if val < 5.0 else "unhealthy"
+            display_val = f"{val:.2f}%"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
+    scorecard.append({
+        "id": "hy_spread",
+        "label": "HY Credit Spread",
+        "category": "Credit",
+        "status": status,
+        "value": display_val
+    })
+    
+    # 11. m2_growth
+    m2_data = indicators.get("m2_growth", [])
+    if m2_data:
+        latest = m2_data[-1]
+        val = latest.get("value")
+        if val is not None:
+            status = "healthy" if val >= 0.0 else "unhealthy"
+            display_val = f"{val:.2f}%"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
+    scorecard.append({
+        "id": "m2_growth",
+        "label": "M2 YoY Growth",
+        "category": "Liquidity",
+        "status": status,
+        "value": display_val
+    })
+    
+    # 12. sector_leadership (unimplemented)
+    scorecard.append({
+        "id": "sector_leadership",
+        "label": "Sector MA Breadth",
+        "category": "Leadership",
+        "status": "unavailable",
+        "value": None
+    })
+    
+    # Calculate health_score and health_total
+    health_score = sum(1 for m in scorecard if m["status"] == "healthy")
+    health_total = sum(1 for m in scorecard if m["status"] in ("healthy", "unhealthy"))
+    
+    return scorecard, health_score, health_total
+
 def main():
     existing_data = load_existing_data()
     
@@ -456,6 +687,24 @@ def main():
         logger.warning(f"Failed to fetch VIX data: {e}")
         vix_list = existing_indicators.get("vix", [])
         updated_data["indicators"]["vix"] = fallback_duplicate_last_value("vix", vix_list)
+            
+    # Fetch S&P 500 trend and momentum data
+    try:
+        updated_data["indicators"]["sp500_trend"] = fetch_sp500_trend()
+    except Exception as e:
+        logger.warning(f"Failed to fetch S&P 500 trend data: {e}")
+        trend_list = existing_indicators.get("sp500_trend", [])
+        if trend_list:
+            today_str = datetime.now().strftime('%Y-%m-%d')
+            last_entry = trend_list[-1]
+            if last_entry.get("date") == today_str:
+                updated_data["indicators"]["sp500_trend"] = trend_list
+            else:
+                new_entry = dict(last_entry)
+                new_entry["date"] = today_str
+                updated_data["indicators"]["sp500_trend"] = trend_list + [new_entry]
+        else:
+            updated_data["indicators"]["sp500_trend"] = []
             
     # Fetch standard FRED indicators
     fred_configs = {
@@ -567,6 +816,19 @@ def main():
         logger.error(f"Failed to calculate Market Regime Index: {e}")
         updated_data["indicators"]["market_regime_index"] = existing_indicators.get("market_regime_index", [])
         updated_data["market_regime_score"] = existing_data.get("market_regime_score", 50.0)
+
+    # Calculate scorecard
+    try:
+        scorecard, health_score, health_total = evaluate_scorecard(updated_data["indicators"])
+        updated_data["scorecard"] = scorecard
+        updated_data["health_score"] = health_score
+        updated_data["health_total"] = health_total
+        logger.info(f"Successfully evaluated scorecard: {health_score} of {health_total} healthy")
+    except Exception as e:
+        logger.error(f"Failed to evaluate scorecard: {e}")
+        updated_data["scorecard"] = existing_data.get("scorecard", [])
+        updated_data["health_score"] = existing_data.get("health_score", 0)
+        updated_data["health_total"] = existing_data.get("health_total", 0)
 
     save_data(updated_data)
 
