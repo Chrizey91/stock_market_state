@@ -467,7 +467,134 @@ def main():
         
     updated_data["indicators"]["insider_ratio"] = insider_list
 
+    # Calculate composite market regime index
+    try:
+        regime_timeline = calculate_market_regime_index(updated_data["indicators"])
+        updated_data["indicators"]["market_regime_index"] = regime_timeline
+        if regime_timeline:
+            updated_data["market_regime_score"] = regime_timeline[-1]["value"]
+            logger.info(f"Successfully calculated Market Regime Index. Current score: {updated_data['market_regime_score']}")
+        else:
+            updated_data["market_regime_score"] = 50.0
+            logger.warning("Market Regime Index timeline is empty. Setting default score to 50.0")
+    except Exception as e:
+        logger.error(f"Failed to calculate Market Regime Index: {e}")
+        updated_data["indicators"]["market_regime_index"] = existing_data.get("indicators", {}).get("market_regime_index", [])
+        updated_data["market_regime_score"] = existing_data.get("market_regime_score", 50.0)
+
     save_data(updated_data)
+
+def normalize_vix(vix):
+    if vix is None:
+        return 50.0
+    # Clamped linear mapping: <=12 is 100 (Risk-On), >=35 is 0 (Risk-Off)
+    val = 100.0 - (vix - 12.0) / (35.0 - 12.0) * 100.0
+    return max(0.0, min(100.0, val))
+
+def normalize_yield_curve(yc):
+    if yc is None:
+        return 50.0
+    # Clamped linear mapping: <=-0.5 is 0 (Risk-Off), >=1.5 is 100 (Risk-On)
+    val = (yc - (-0.5)) / (1.5 - (-0.5)) * 100.0
+    return max(0.0, min(100.0, val))
+
+def normalize_high_yield_spread(hy):
+    if hy is None:
+        return 50.0
+    # Clamped linear mapping: <=3.0 is 100 (Risk-On), >=8.5 is 0 (Risk-Off)
+    val = 100.0 - (hy - 3.0) / (8.5 - 3.0) * 100.0
+    return max(0.0, min(100.0, val))
+
+def normalize_sp500_breadth(breadth):
+    if breadth is None:
+        return 50.0
+    return max(0.0, min(100.0, breadth))
+
+def normalize_m2_growth(m2):
+    if m2 is None:
+        return 50.0
+    # Clamped linear mapping: <=0 is 0 (Risk-Off), >=8.0 is 100 (Risk-On)
+    val = (m2 - 0.0) / (8.0 - 0.0) * 100.0
+    return max(0.0, min(100.0, val))
+
+def calculate_market_regime_index(indicators):
+    # Weights definition
+    weights = {
+        "vix": 0.25,
+        "high_yield_spread": 0.20,
+        "yield_curve": 0.15,
+        "sp500_breadth": 0.20,
+        "m2_growth": 0.20
+    }
+    
+    # Extract historical timelines
+    vix_series = indicators.get("vix", [])
+    hy_series = indicators.get("high_yield_spread", [])
+    yc_series = indicators.get("yield_curve", [])
+    breadth_series = indicators.get("sp500_breadth", [])
+    m2_series = indicators.get("m2_growth", [])
+    
+    # Collect all unique dates across these 5 indicators
+    all_dates = set()
+    for series in [vix_series, hy_series, yc_series, breadth_series, m2_series]:
+        for pt in series:
+            if "date" in pt:
+                all_dates.add(pt["date"])
+                
+    sorted_dates = sorted(list(all_dates))
+    
+    # Create maps for fast lookups
+    vix_map = {pt["date"]: pt["value"] for pt in vix_series if "date" in pt and pt.get("value") is not None}
+    hy_map = {pt["date"]: pt["value"] for pt in hy_series if "date" in pt and pt.get("value") is not None}
+    yc_map = {pt["date"]: pt["value"] for pt in yc_series if "date" in pt and pt.get("value") is not None}
+    breadth_map = {pt["date"]: pt["value"] for pt in breadth_series if "date" in pt and pt.get("value") is not None}
+    m2_map = {pt["date"]: pt["value"] for pt in m2_series if "date" in pt and pt.get("value") is not None}
+    
+    # State for forward-filling
+    last_vix = None
+    last_hy = None
+    last_yc = None
+    last_breadth = None
+    last_m2 = None
+    
+    timeline = []
+    for d in sorted_dates:
+        # Update last seen value
+        if d in vix_map: last_vix = vix_map[d]
+        if d in hy_map: last_hy = hy_map[d]
+        if d in yc_map: last_yc = yc_map[d]
+        if d in breadth_map: last_breadth = breadth_map[d]
+        if d in m2_map: last_m2 = m2_map[d]
+        
+        # Calculate only if we have at least one value for all 5 indicators
+        if (last_vix is not None and 
+            last_hy is not None and 
+            last_yc is not None and 
+            last_breadth is not None and 
+            last_m2 is not None):
+            
+            # Normalize each
+            n_vix = normalize_vix(last_vix)
+            n_hy = normalize_high_yield_spread(last_hy)
+            n_yc = normalize_yield_curve(last_yc)
+            n_breadth = normalize_sp500_breadth(last_breadth)
+            n_m2 = normalize_m2_growth(last_m2)
+            
+            # Weighted average
+            score = (
+                n_vix * weights["vix"] +
+                n_hy * weights["high_yield_spread"] +
+                n_yc * weights["yield_curve"] +
+                n_breadth * weights["sp500_breadth"] +
+                n_m2 * weights["m2_growth"]
+            )
+            
+            timeline.append({
+                "date": d,
+                "value": round(score, 2)
+            })
+            
+    return timeline
 
 if __name__ == "__main__":
     main()

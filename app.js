@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
       marketData = await response.json();
       
       updateUIHeader(marketData.last_updated);
+      renderHeroSection(marketData);
       renderSentimentTab(marketData.indicators);
       renderMonetaryTab(marketData.indicators);
       renderEconomyTab(marketData.indicators);
@@ -676,6 +677,239 @@ document.addEventListener('DOMContentLoaded', () => {
       charts.sp500Breadth = new ApexCharts(document.querySelector("#sp500-breadth-chart"), opts);
       charts.sp500Breadth.render();
     }
+  }
+
+  // Hero Section Rendering (Market Regime Score & Sidebar Summary)
+  function renderHeroSection(data) {
+    const score = data.market_regime_score !== undefined ? data.market_regime_score : 50.0;
+    const indicators = data.indicators || {};
+
+    // 1. Update Gauge Card Info
+    const scoreEl = document.getElementById('regime-score-val');
+    if (scoreEl) scoreEl.textContent = score.toFixed(1);
+
+    const statusLabelEl = document.getElementById('regime-status-label');
+    if (statusLabelEl) {
+      statusLabelEl.className = 'regime-status-badge'; // Reset classes
+      if (score >= 70) {
+        statusLabelEl.textContent = 'Risk-On / Expansion';
+        statusLabelEl.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+        statusLabelEl.style.color = 'var(--accent-green)';
+      } else if (score >= 45) {
+        statusLabelEl.textContent = 'Neutral / Transition';
+        statusLabelEl.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+        statusLabelEl.style.color = 'var(--accent-yellow)';
+      } else {
+        statusLabelEl.textContent = 'Risk-Off / Panic';
+        statusLabelEl.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+        statusLabelEl.style.color = 'var(--accent-red)';
+      }
+    }
+
+    // 2. Render Gauge Chart (ApexCharts)
+    renderRegimeGauge(score);
+
+    // 3. Update VIX Sidebar Card
+    const vixData = indicators.vix || [];
+    if (vixData.length > 0) {
+      const latestVix = vixData[vixData.length - 1].value;
+      const vixValEl = document.getElementById('summary-vix-val');
+      const vixBadgeEl = document.getElementById('summary-vix-badge');
+      const vixDescEl = document.getElementById('summary-vix-desc');
+
+      if (vixValEl) vixValEl.textContent = latestVix.toFixed(2);
+      if (vixBadgeEl) {
+        vixBadgeEl.className = 'badge-pill';
+        if (latestVix < 15) {
+          vixBadgeEl.textContent = 'Calm';
+          vixBadgeEl.classList.add('status-complacent');
+        } else if (latestVix < 25) {
+          vixBadgeEl.textContent = 'Normal';
+          vixBadgeEl.classList.add('status-normal');
+        } else if (latestVix < 35) {
+          vixBadgeEl.textContent = 'Elevated';
+          vixBadgeEl.classList.add('status-elevated');
+        } else {
+          vixBadgeEl.textContent = 'Panic';
+          vixBadgeEl.classList.add('status-panic');
+        }
+      }
+      if (vixDescEl) {
+        if (latestVix < 15) {
+          vixDescEl.textContent = 'Market environment is calm and complacent.';
+        } else if (latestVix < 25) {
+          vixDescEl.textContent = 'Standard volatility and risk levels.';
+        } else if (latestVix < 35) {
+          vixDescEl.textContent = 'Elevated market fear and price swings.';
+        } else {
+          vixDescEl.textContent = 'High market panic! Risk conditions severe.';
+        }
+      }
+    }
+
+    // 4. Update Bond Market (Yield Curve 10Y-2Y) Sidebar Card
+    const ycData = indicators.yield_curve || [];
+    if (ycData.length > 0) {
+      const latestYc = ycData[ycData.length - 1].value;
+      const bondValEl = document.getElementById('summary-bond-val');
+      const bondBadgeEl = document.getElementById('summary-bond-badge');
+      const bondDescEl = document.getElementById('summary-bond-desc');
+
+      if (bondValEl) bondValEl.textContent = `${latestYc.toFixed(2)}%`;
+      if (bondBadgeEl) {
+        bondBadgeEl.className = 'badge-pill';
+        if (latestYc < 0) {
+          bondBadgeEl.textContent = 'Inverted';
+          bondBadgeEl.classList.add('status-panic');
+        } else if (latestYc < 0.5) {
+          bondBadgeEl.textContent = 'Flat';
+          bondBadgeEl.classList.add('status-elevated');
+        } else {
+          bondBadgeEl.textContent = 'Normal';
+          bondBadgeEl.classList.add('status-complacent');
+        }
+      }
+      if (bondDescEl) {
+        if (latestYc < 0) {
+          bondDescEl.textContent = 'Yield curve is inverted, signaling recession risk.';
+        } else if (latestYc < 0.5) {
+          bondDescEl.textContent = 'Curve is flattening. Monitor closely.';
+        } else {
+          bondDescEl.textContent = 'Curve is upward-sloping and healthy.';
+        }
+      }
+    }
+
+    // 5. Update Retail Sentiment (Fear & Greed) Sidebar Card
+    const fgData = indicators.fear_greed || [];
+    if (fgData.length > 0) {
+      const latestFg = fgData[fgData.length - 1].value;
+      const fgValEl = document.getElementById('summary-sentiment-val');
+      const fgBadgeEl = document.getElementById('summary-sentiment-badge');
+      const fgDescEl = document.getElementById('summary-sentiment-desc');
+
+      if (fgValEl) fgValEl.textContent = latestFg.toFixed(0);
+      if (fgBadgeEl) {
+        fgBadgeEl.className = 'badge-pill';
+        if (latestFg < 25) {
+          fgBadgeEl.textContent = 'Extreme Fear';
+          fgBadgeEl.classList.add('status-panic');
+        } else if (latestFg < 45) {
+          fgBadgeEl.textContent = 'Fear';
+          fgBadgeEl.classList.add('status-elevated');
+        } else if (latestFg < 55) {
+          fgBadgeEl.textContent = 'Neutral';
+          fgBadgeEl.classList.add('status-normal');
+        } else if (latestFg < 75) {
+          fgBadgeEl.textContent = 'Greed';
+          fgBadgeEl.classList.add('status-complacent');
+        } else {
+          fgBadgeEl.textContent = 'Extreme Greed';
+          fgBadgeEl.classList.add('status-complacent');
+        }
+      }
+      if (fgDescEl) {
+        if (latestFg < 25) {
+          fgDescEl.textContent = 'Extreme pessimism. Potential buying zone.';
+        } else if (latestFg < 45) {
+          fgDescEl.textContent = 'Retail investors are cautious and fearful.';
+        } else if (latestFg < 55) {
+          fgDescEl.textContent = 'Sentiment is balanced and neutral.';
+        } else if (latestFg < 75) {
+          fgDescEl.textContent = 'Retail investors are optimistic and greedy.';
+        } else {
+          fgDescEl.textContent = 'Extreme optimism. Precedes market tops.';
+        }
+      }
+    }
+  }
+
+  // Render ApexCharts radial gauge chart for regime score
+  function renderRegimeGauge(score) {
+    // Pick color based on score
+    let gaugeColor = '#3b82f6'; // Blue default
+    if (score >= 70) {
+      gaugeColor = '#10b981'; // Green (Expansion)
+    } else if (score >= 45) {
+      gaugeColor = '#f59e0b'; // Yellow (Neutral)
+    } else {
+      gaugeColor = '#ef4444'; // Red (Panic)
+    }
+
+    const options = {
+      series: [score],
+      chart: {
+        type: 'radialBar',
+        height: '100%',
+        offsetY: -10,
+        sparkline: { enabled: true }
+      },
+      plotOptions: {
+        radialBar: {
+          startAngle: -135,
+          endAngle: 135,
+          hollow: {
+            margin: 0,
+            size: '70%',
+            background: 'transparent',
+            image: undefined,
+            imageWidth: 150,
+            imageHeight: 150,
+            imageOffsetY: 0,
+            imageClipped: true,
+            position: 'front',
+            dropShadow: {
+              enabled: true,
+              top: 3,
+              left: 0,
+              blur: 4,
+              opacity: 0.24
+            }
+          },
+          track: {
+            background: 'rgba(255, 255, 255, 0.05)',
+            strokeWidth: '67%',
+            margin: 0, // a parameter of track margin
+            dropShadow: {
+              enabled: true,
+              top: -3,
+              left: 0,
+              blur: 4,
+              opacity: 0.35
+            }
+          },
+          dataLabels: {
+            show: true,
+            name: {
+              show: false
+            },
+            value: {
+              offsetY: 8,
+              color: '#f4f4f5',
+              fontSize: '2rem',
+              fontWeight: 800,
+              fontFamily: 'Plus Jakarta Sans',
+              show: true,
+              formatter: function (val) {
+                return val.toFixed(1);
+              }
+            }
+          }
+        }
+      },
+      fill: {
+        type: 'solid',
+        colors: [gaugeColor]
+      },
+      stroke: {
+        lineCap: 'round'
+      },
+      labels: ['Regime Score']
+    };
+
+    if (charts.regimeGauge) charts.regimeGauge.destroy();
+    charts.regimeGauge = new ApexCharts(document.querySelector("#regime-gauge-chart"), options);
+    charts.regimeGauge.render();
   }
 
   // Load Data on Initial Page Load

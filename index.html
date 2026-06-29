@@ -42,6 +42,78 @@
     </header>
 
     <main class="app-main">
+      <!-- Market Regime Hero Section -->
+      <section class="hero-section">
+        <div class="hero-grid">
+          <!-- Radial Gauge Card -->
+          <div class="card gauge-card">
+            <div class="card-header-simple">
+              <span class="category-tag">SYSTEMIC RISK</span>
+              <h2>Market Regime Index</h2>
+            </div>
+            <div class="gauge-content">
+              <div id="regime-gauge-chart" class="gauge-container"></div>
+              <div class="gauge-info">
+                <div class="gauge-score-display">
+                  <span id="regime-score-val">--</span>
+                  <span class="gauge-score-max">/100</span>
+                </div>
+                <span id="regime-status-label" class="regime-status-badge">CALCULATING</span>
+                <p class="gauge-desc">Aggregated indicator of liquidity (M2 YoY), equity breadth (S&P 500 > 200 SMA), credit stress (High Yield spreads), curve steepness (10Y-2Y), and volatility (VIX). High score represents low systemic risk / Risk-On.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar Summary Cards -->
+          <div class="hero-sidebar">
+            <!-- Volatility Summary Card -->
+            <div class="card summary-card" id="summary-vix-card">
+              <div class="summary-card-icon shadow-vix">
+                <i data-lucide="shield-alert"></i>
+              </div>
+              <div class="summary-card-details">
+                <span class="summary-label">VOLATILITY STATUS</span>
+                <div class="summary-value-group">
+                  <h3 id="summary-vix-val">--</h3>
+                  <span id="summary-vix-badge" class="badge-pill">LOADING</span>
+                </div>
+                <p id="summary-vix-desc">Loading volatility state...</p>
+              </div>
+            </div>
+
+            <!-- Bond Market Summary Card -->
+            <div class="card summary-card" id="summary-bond-card">
+              <div class="summary-card-icon shadow-bond">
+                <i data-lucide="activity"></i>
+              </div>
+              <div class="summary-card-details">
+                <span class="summary-label">BOND MARKET STATUS</span>
+                <div class="summary-value-group">
+                  <h3 id="summary-bond-val">--</h3>
+                  <span id="summary-bond-badge" class="badge-pill">LOADING</span>
+                </div>
+                <p id="summary-bond-desc">Loading yield curve state...</p>
+              </div>
+            </div>
+
+            <!-- Retail Sentiment Summary Card -->
+            <div class="card summary-card" id="summary-sentiment-card">
+              <div class="summary-card-icon shadow-sentiment">
+                <i data-lucide="smile"></i>
+              </div>
+              <div class="summary-card-details">
+                <span class="summary-label">RETAIL SENTIMENT</span>
+                <div class="summary-value-group">
+                  <h3 id="summary-sentiment-val">--</h3>
+                  <span id="summary-sentiment-badge" class="badge-pill">LOADING</span>
+                </div>
+                <p id="summary-sentiment-desc">Loading market sentiment...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Navigation Tabs -->
       <nav class="tab-navigation">
         <button class="tab-btn active" data-tab="sentiment" id="tab-btn-sentiment">
