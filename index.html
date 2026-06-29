@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Macro State Registry & Dashboard</title>
+  <meta name="description" content="A clean, modern, high-level market dashboard displaying volatility, sentiment, and monetary indicators.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- ApexCharts CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <div class="brand">
+          <div class="brand-icon">
+            <i data-lucide="activity"></i>
+          </div>
+          <div class="brand-text">
+            <h1>MACRO STATE SYSTEM</h1>
+            <p>Systemic risk, sentiment, and liquidity analytics for long-term investors.</p>
+          </div>
+        </div>
+        <div class="status-pill">
+          <span class="pulse-indicator"></span>
+          <span class="status-label">DATA FEED STABLE</span>
+          <span class="divider">|</span>
+          <span id="last-updated-time">LOAD-TIME: N/A</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- Navigation Tabs -->
+      <nav class="tab-navigation">
+        <button class="tab-btn active" data-tab="sentiment" id="tab-btn-sentiment">
+          <i data-lucide="compass"></i>
+          <span>Sentiment & Volatility</span>
+        </button>
+        <button class="tab-btn" data-tab="monetary" id="tab-btn-monetary">
+          <i data-lucide="landmark"></i>
+          <span>Monetary & Liquidity</span>
+        </button>
+        <button class="tab-btn" data-tab="economy" id="tab-btn-economy">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Economy & Internals</span>
+        </button>
+      </nav>
+
+      <!-- Tab Content Area -->
+      <div class="tab-content">
+        <!-- Sentiment & Volatility Section -->
+        <section id="sentiment-tab" class="tab-pane active">
+          <div class="grid-layout">
+            <div class="card chart-card wide-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">SENTIMENT & VOLATILITY</span>
+                  <h2>CBOE Volatility Index (VIX)</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-vix">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>About the Volatility Index (VIX)</h4>
+                      <p>Often referred to as the stock market's "fear gauge", the VIX represents the market's expectation of 30-day forward-looking volatility derived from S&P 500 index options.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&lt; 15 (Complacency):</strong> Indicates low risk perception, typical in mature bull markets.</li>
+                        <li><strong>15 - 25 (Normal):</strong> Standard trading environment with typical market fluctuations.</li>
+                        <li><strong>25 - 35 (Elevated Fear):</strong> High uncertainty. Often correlates with market corrections.</li>
+                        <li><strong>&gt; 35 (Panic):</strong> Extreme distress, capitulation, and potential long-term buying opportunities.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="vix-chart" class="chart-container"></div>
+              </div>
+            </div>
+            
+            <div class="card info-sidebar-card">
+              <div class="card-header">
+                <h2>Sentiment Summary</h2>
+              </div>
+              <div class="card-body sidebar-summary-list">
+                <div class="summary-stat-row">
+                  <div class="stat-meta">
+                    <span class="stat-label">Current VIX Level</span>
+                    <span class="stat-desc">Implied volatility expectation</span>
+                  </div>
+                  <div class="stat-value-group">
+                    <span id="vix-current-val" class="stat-value">--</span>
+                    <span id="vix-current-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="info-box border-left-accent">
+                  <h3>How to interpret Sentiment</h3>
+                  <p>Sentiment indicators reflect the psychology of crowd behavior. When volatility spikes, it signals hedging activity and panic. For long-term investors, extreme fear (high VIX) is historically a contrarian indicator of market bottoms.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Monetary & Liquidity Section -->
+        <section id="monetary-tab" class="tab-pane">
+          <div class="grid-layout cols-3">
+            <!-- Fed Funds Rate -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">CENTRAL BANK</span>
+                  <h2>Fed Funds Rate</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-fedfunds">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Fed Funds Rate (FEDFUNDS)</h4>
+                      <p>The target interest rate set by the Federal Open Market Committee (FOMC) at which commercial banks borrow and lend excess reserves overnight.</p>
+                      <hr>
+                      <p><strong>Significance:</strong> The bedrock of global borrowing costs. High/rising rates seek to cool inflation but constrict liquidity, compressing corporate valuations. Low/falling rates stimulate economic expansion and boost equity multiples.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="fedfunds-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- 10-Year Treasury Yield -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">BOND MARKET</span>
+                  <h2>10-Year Treasury Yield</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-dgs10">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>10-Year US Treasury Yield (DGS10)</h4>
+                      <p>The yield on the benchmark 10-Year US Government debt security. Often called the "risk-free" rate of return.</p>
+                      <hr>
+                      <p><strong>Significance:</strong> Directly dictates mortgage rates, consumer loans, and corporate debt costs globally. Rising yields decrease the present value of future corporate cash flows, making equities (especially high-growth tech) less attractive compared to bonds.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="dgs10-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- Yield Curve Spread -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">SPREADS & SENSITIVITY</span>
+                  <h2>10Y-2Y Spread (Yield Curve)</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-t10y2y">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>10-Year vs 2-Year Treasury Spread (T10Y2Y)</h4>
+                      <p>The yield difference between 10-Year and 2-Year US Treasuries. A key gauge of economic expectations.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&gt; 0 (Normal):</strong> Long-term debt yields more than short-term debt, indicating healthy economic expansion.</li>
+                        <li><strong>&lt; 0 (Inversion):</strong> Short-term debt yields more than long-term debt. Historically, a yield curve inversion has inverted 12-18 months prior to every major economic recession.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="t10y2y-chart" class="chart-container"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Economy & Internals Section -->
+        <section id="economy-tab" class="tab-pane">
+          <div class="card empty-state-card">
+            <div class="empty-state-content">
+              <div class="empty-state-icon">
+                <i data-lucide="database"></i>
+              </div>
+              <h3>Data Stream Pending</h3>
+              <p>Economic indicators (ISM Manufacturing PMI), Credit Spreads (High Yield Credit Spreads), and S&P 500 moving average breadth are scheduled to be integrated in the upcoming development cycles.</p>
+              <div class="badge">SCAFFOLDING READY</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <p>© 2026 Macro State System. Powered by keyless public FRED feeds and Yahoo Finance. Built for long-term strategic asset allocation.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

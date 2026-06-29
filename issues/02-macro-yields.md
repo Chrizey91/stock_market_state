@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: completed
 
 ## Parent
 
@@ -10,11 +10,11 @@ Extend the Python data pipeline and frontend interface to integrate primary inte
 
 ## Acceptance criteria
 
-- [ ] Python script fetches 5 years of historical data for the Fed Funds Rate (`FEDFUNDS`), 10-Year Treasury Yield (`DGS10`), and the 10-Year vs 2-Year Treasury Spread (`T10Y2Y`) via public, keyless FRED CSV graph URLs.
-- [ ] Script aggregates this new data into `data/market_data.json` without breaking the VIX data structure.
-- [ ] UI features a functional tab navigation bar (Sentiment & Volatility, Monetary & Liquidity, Economy & Internals).
-- [ ] Selecting the "Monetary & Liquidity" tab reveals line/area charts for the three macroeconomic indicators.
-- [ ] Each chart includes educational tooltips explaining the series (e.g. interpreting a negative 10Y-2Y spread as a yield curve inversion).
+- [x] Python script fetches 5 years of historical data for the Fed Funds Rate (`FEDFUNDS`), 10-Year Treasury Yield (`DGS10`), and the 10-Year vs 2-Year Treasury Spread (`T10Y2Y`) via public, keyless FRED CSV graph URLs.
+- [x] Script aggregates this new data into `data/market_data.json` without breaking the VIX data structure.
+- [x] UI features a functional tab navigation bar (Sentiment & Volatility, Monetary & Liquidity, Economy & Internals).
+- [x] Selecting the "Monetary & Liquidity" tab reveals line/area charts for the three macroeconomic indicators.
+- [x] Each chart includes educational tooltips explaining the series (e.g. interpreting a negative 10Y-2Y spread as a yield curve inversion).
 
 ## Blocked by
 
