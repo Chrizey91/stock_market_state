@@ -21,7 +21,8 @@ class TestScorecard(unittest.TestCase):
             "equal_vs_cap_weight": [{"date": "2026-06-29", "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}],
             "sector_leadership": {"above_200d": 9, "total": 11, "sectors": []},
             "eps_growth": [{"date": "2026-06-29", "value": 5.0}],
-            "revenue_growth": [{"date": "2026-06-29", "value": 3.0}]
+            "revenue_growth": [{"date": "2026-06-29", "value": 3.0}],
+            "forward_pe": [{"date": "2026-06-29", "value": 18.0}]
         }
         
         scorecard, health_score, health_total = evaluate_scorecard(indicators)
@@ -38,14 +39,14 @@ class TestScorecard(unittest.TestCase):
         # sector_leadership: healthy (9 >= 8)
         # eps_growth: healthy (5.0 > 0%)
         # revenue_growth: healthy (3.0 > 0%)
-        # Total healthy = 11
-        # Total available = 11 (others are unavailable)
-        self.assertEqual(health_score, 11)
-        self.assertEqual(health_total, 11)
+        # Total healthy = 12
+        # Total available = 12 (others are unavailable)
+        self.assertEqual(health_score, 12)
+        self.assertEqual(health_total, 12)
         
         # Verify status details
         for item in scorecard:
-            if item["id"] in ["sp500_trend", "sp500_momentum", "sp500_breadth", "sp500_ad_line", "vix", "hy_spread", "m2_growth", "equal_vs_cap_weight", "sector_leadership", "eps_growth", "revenue_growth"]:
+            if item["id"] in ["sp500_trend", "sp500_momentum", "sp500_breadth", "sp500_ad_line", "vix", "hy_spread", "m2_growth", "equal_vs_cap_weight", "sector_leadership", "eps_growth", "revenue_growth", "forward_pe"]:
                 self.assertEqual(item["status"], "healthy")
                 if item["id"] == "sp500_ad_line":
                     self.assertEqual(item["value"], "Rising")
@@ -57,6 +58,8 @@ class TestScorecard(unittest.TestCase):
                     self.assertEqual(item["value"], "+5.00%")
                 if item["id"] == "revenue_growth":
                     self.assertEqual(item["value"], "+3.00%")
+                if item["id"] == "forward_pe":
+                    self.assertEqual(item["value"], "18.00")
             else:
                 self.assertEqual(item["status"], "unavailable")
                 self.assertIsNone(item["value"])
@@ -73,7 +76,8 @@ class TestScorecard(unittest.TestCase):
             "equal_vs_cap_weight": [{"date": "2026-06-29", "rsp_return": 4.0, "spy_return": 10.0, "spread": -6.0}],
             "sector_leadership": {"above_200d": 5, "total": 11, "sectors": []},
             "eps_growth": [{"date": "2026-06-29", "value": -1.5}],
-            "revenue_growth": [{"date": "2026-06-29", "value": -2.0}]
+            "revenue_growth": [{"date": "2026-06-29", "value": -2.0}],
+            "forward_pe": [{"date": "2026-06-29", "value": 25.0}]
         }
         
         scorecard, health_score, health_total = evaluate_scorecard(indicators)
@@ -91,13 +95,13 @@ class TestScorecard(unittest.TestCase):
         # eps_growth: unhealthy (-1.5 <= 0%)
         # revenue_growth: unhealthy (-2.0 <= 0%)
         # Total healthy = 0
-        # Total available = 11
+        # Total available = 12
         self.assertEqual(health_score, 0)
-        self.assertEqual(health_total, 11)
+        self.assertEqual(health_total, 12)
         
         # Verify status details
         for item in scorecard:
-            if item["id"] in ["sp500_trend", "sp500_momentum", "sp500_breadth", "sp500_ad_line", "vix", "hy_spread", "m2_growth", "equal_vs_cap_weight", "sector_leadership", "eps_growth", "revenue_growth"]:
+            if item["id"] in ["sp500_trend", "sp500_momentum", "sp500_breadth", "sp500_ad_line", "vix", "hy_spread", "m2_growth", "equal_vs_cap_weight", "sector_leadership", "eps_growth", "revenue_growth", "forward_pe"]:
                 self.assertEqual(item["status"], "unhealthy")
                 if item["id"] == "sp500_ad_line":
                     self.assertEqual(item["value"], "Falling")
@@ -105,6 +109,8 @@ class TestScorecard(unittest.TestCase):
                     self.assertEqual(item["value"], "-6.00%")
                 if item["id"] == "sector_leadership":
                     self.assertEqual(item["value"], "5/11")
+                if item["id"] == "forward_pe":
+                    self.assertEqual(item["value"], "25.00")
 
     def test_evaluate_scorecard_mixed_and_missing(self):
         # Setup indicators with mixed healthy/unhealthy and some missing

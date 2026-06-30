@@ -564,6 +564,89 @@ def fetch_sp500_earnings_fmp():
         logger.warning(f"Failed to fetch S&P 500 earnings from FMP: {e}")
         return [], []
 
+def fetch_cape_ratio_nasdaq():
+    """Fetch Shiller CAPE Ratio from Nasdaq Data Link."""
+    logger.info("Fetching Shiller CAPE Ratio from Nasdaq Data Link...")
+    api_key = os.environ.get("NASDAQ_DATA_LINK_API_KEY")
+    if not api_key:
+        logger.warning("NASDAQ_DATA_LINK_API_KEY environment variable is absent. Skipping CAPE ratio.")
+        return []
+    
+    url = f"https://data.nasdaq.com/api/v3/datasets/MULTPL/SHILLER_PE_RATIO_MONTH.json?api_key={api_key}"
+    try:
+        response = requests.get(url, timeout=15)
+        if response.status_code in (401, 402, 403):
+            logger.warning(f"Nasdaq Data Link API returned status {response.status_code}. Skipping CAPE ratio.")
+            return []
+        response.raise_for_status()
+        data = response.json()
+        raw_data = data.get("dataset", {}).get("data", [])
+        
+        cape_ratio = []
+        for item in raw_data:
+            if len(item) >= 2:
+                date_str = item[0]
+                val = item[1]
+                if date_str and val is not None:
+                    cape_ratio.append({
+                        "date": date_str,
+                        "value": round(float(val), 2)
+                    })
+        cape_ratio.sort(key=lambda x: x["date"])
+        
+        # Filter last 5 years
+        start_date = (datetime.now() - timedelta(days=5 * 365)).strftime('%Y-%m-%d')
+        cape_ratio = [pt for pt in cape_ratio if pt["date"] >= start_date]
+        
+        logger.info(f"Successfully fetched {len(cape_ratio)} CAPE ratio data points.")
+        return cape_ratio
+    except Exception as e:
+        logger.warning(f"Failed to fetch Shiller CAPE Ratio from Nasdaq Data Link: {e}")
+        return []
+
+def fetch_sp500_pe_fmp():
+    """Fetch S&P 500 Forward P/E ratio from FMP."""
+    logger.info("Fetching S&P 500 Forward P/E ratio from Financial Modeling Prep...")
+    api_key = os.environ.get("FMP_API_KEY")
+    if not api_key:
+        logger.warning("FMP_API_KEY environment variable is absent. Skipping Forward P/E.")
+        return []
+        
+    url = f"https://financialmodelingprep.com/api/v4/standard_pe_ratio_index?symbol=^GSPC&apikey={api_key}"
+    try:
+        response = requests.get(url, timeout=15)
+        if response.status_code in (401, 402, 403):
+            logger.warning(f"FMP API returned status {response.status_code} for Forward P/E. Skipping.")
+            return []
+        response.raise_for_status()
+        data = response.json()
+        
+        forward_pe = []
+        if isinstance(data, list):
+            for item in data:
+                date_str = item.get("date")
+                val = None
+                for key in ["pe", "peRatio", "value", "priceToEarnings"]:
+                    if key in item and item[key] is not None:
+                        val = item[key]
+                        break
+                if date_str and val is not None:
+                    forward_pe.append({
+                        "date": date_str,
+                        "value": round(float(val), 2)
+                    })
+        forward_pe.sort(key=lambda x: x["date"])
+        
+        # Filter last 5 years
+        start_date = (datetime.now() - timedelta(days=5 * 365)).strftime('%Y-%m-%d')
+        forward_pe = [pt for pt in forward_pe if pt["date"] >= start_date]
+        
+        logger.info(f"Successfully fetched {len(forward_pe)} Forward P/E data points.")
+        return forward_pe
+    except Exception as e:
+        logger.warning(f"Failed to fetch Forward P/E ratio from FMP: {e}")
+        return []
+
 def generate_mock_fear_greed(days=365):
     end_date = datetime.now()
     data_points = []
@@ -976,14 +1059,28 @@ def evaluate_scorecard(indicators):
         "value": display_val
     })
     
-    # 8. forward_pe (unimplemented)
+    # 8. forward_pe
+    forward_pe_data = indicators.get("forward_pe", [])
+    if forward_pe_data:
+        latest = forward_pe_data[-1]
+        val = latest.get("value")
+        if val is not None:
+            status = "healthy" if 14.0 <= val <= 22.0 else "unhealthy"
+            display_val = f"{val:.2f}"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
     scorecard.append({
         "id": "forward_pe",
         "label": "Forward P/E",
         "category": "Valuation",
-        "status": "unavailable",
-        "value": None
+        "status": status,
+        "value": display_val
     })
+
     
     # 9. vix
     vix_data = indicators.get("vix", [])
@@ -1217,6 +1314,21 @@ def main():
         logger.warning(f"Failed to fetch/compute S&P 500 earnings: {e}")
         updated_data["indicators"]["eps_growth"] = []
         updated_data["indicators"]["revenue_growth"] = []
+
+    # Fetch S&P 500 Forward P/E from FMP
+    try:
+        updated_data["indicators"]["forward_pe"] = fetch_sp500_pe_fmp()
+    except Exception as e:
+        logger.warning(f"Failed to fetch S&P 500 Forward P/E: {e}")
+        updated_data["indicators"]["forward_pe"] = []
+
+    # Fetch Shiller CAPE Ratio from Nasdaq Data Link
+    try:
+        updated_data["indicators"]["cape_ratio"] = fetch_cape_ratio_nasdaq()
+    except Exception as e:
+        logger.warning(f"Failed to fetch Shiller CAPE Ratio: {e}")
+        updated_data["indicators"]["cape_ratio"] = []
+
 
     # Fetch Sector ETFs leadership and performance heatmap
     try:

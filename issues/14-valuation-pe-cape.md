@@ -12,17 +12,17 @@ The Forward P/E is a scorecard metric (healthy between 14 and 22). The CAPE Rati
 
 ## Acceptance criteria
 
-- [ ] Python script reads `NASDAQ_DATA_LINK_API_KEY` from `os.environ.get()`.
-- [ ] When key is present, script fetches Shiller CAPE Ratio from Nasdaq Data Link (dataset `MULTPL/SHILLER_PE_RATIO_MONTH`).
-- [ ] When key is absent, script logs a warning and writes an empty array for `cape_ratio`.
-- [ ] Script fetches Forward P/E for S&P 500 from FMP using `FMP_API_KEY` (reusing the key from issue #13).
-- [ ] Data is written to `indicators.forward_pe` and `indicators.cape_ratio` as `{date, value}` arrays.
-- [ ] Scorecard entry for `forward_pe` evaluates healthy when value is between 14 and 22. Set to "unavailable" when FMP key is absent.
-- [ ] CAPE Ratio has no scorecard entry — it is displayed as a supplementary chart only.
-- [ ] UI renders Forward P/E and CAPE Ratio charts in the "Fundamentals & Valuation" tab.
-- [ ] When data is unavailable, chart cards show configuration hints.
-- [ ] GitHub Actions workflow passes `NASDAQ_DATA_LINK_API_KEY` from secrets to the Python script.
-- [ ] Tests verify graceful skip when either key is absent.
+- [x] Python script reads `NASDAQ_DATA_LINK_API_KEY` from `os.environ.get()`.
+- [x] When key is present, script fetches Shiller CAPE Ratio from Nasdaq Data Link (dataset `MULTPL/SHILLER_PE_RATIO_MONTH`).
+- [x] When key is absent, script logs a warning and writes an empty array for `cape_ratio`.
+- [x] Script fetches Forward P/E for S&P 500 from FMP using `FMP_API_KEY` (reusing the key from issue #13).
+- [x] Data is written to `indicators.forward_pe` and `indicators.cape_ratio` as `{date, value}` arrays.
+- [x] Scorecard entry for `forward_pe` evaluates healthy when value is between 14 and 22. Set to "unavailable" when FMP key is absent.
+- [x] CAPE Ratio has no scorecard entry — it is displayed as a supplementary chart only.
+- [x] UI renders Forward P/E and CAPE Ratio charts in the "Fundamentals & Valuation" tab.
+- [x] When data is unavailable, chart cards show configuration hints.
+- [x] GitHub Actions workflow passes `NASDAQ_DATA_LINK_API_KEY` from secrets to the Python script.
+- [x] Tests verify graceful skip when either key is absent.
 
 ## Blocked by
 

@@ -1386,6 +1386,177 @@ document.addEventListener('DOMContentLoaded', () => {
       if (revChartEl) revChartEl.style.display = 'none';
       if (revFallbackEl) revFallbackEl.style.display = 'flex';
     }
+
+    // Render S&P 500 Forward P/E
+    const peData = indicators.forward_pe || [];
+    const peValEl = document.getElementById('forward-pe-val');
+    const peStatusEl = document.getElementById('forward-pe-status');
+    const peChartEl = document.getElementById('forward-pe-chart');
+    const peFallbackEl = document.getElementById('forward-pe-fallback');
+
+    if (peData.length > 0) {
+      if (peChartEl) peChartEl.style.display = 'block';
+      if (peFallbackEl) peFallbackEl.style.display = 'none';
+
+      const latest = peData[peData.length - 1];
+      const latestVal = latest.value;
+
+      if (peValEl) {
+        peValEl.textContent = latestVal.toFixed(2);
+      }
+
+      if (peStatusEl) {
+        peStatusEl.className = 'stat-status';
+        if (latestVal >= 14.0 && latestVal <= 22.0) {
+          peStatusEl.textContent = 'HEALTHY';
+          peStatusEl.classList.add('status-complacent');
+        } else {
+          peStatusEl.textContent = 'UNHEALTHY';
+          peStatusEl.classList.add('status-panic');
+        }
+      }
+
+      const peSeries = peData.map(item => [new Date(item.date).getTime(), item.value]);
+
+      const options = {
+        series: [{
+          name: 'Forward P/E',
+          data: peSeries
+        }],
+        chart: {
+          type: 'line',
+          height: 400,
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#3b82f6'], // Blue
+        stroke: { curve: 'smooth', width: 2.5 },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: { formatter: (value) => value.toFixed(1) }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark',
+          y: { formatter: (value) => value.toFixed(2) }
+        },
+        annotations: {
+          yaxis: [
+            {
+              y: 14.0,
+              borderColor: '#fbbf24',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#fbbf24',
+                style: { color: '#000', background: '#fbbf24', fontWeight: 600 },
+                text: 'Lower Valuation Boundary (14.0)'
+              }
+            },
+            {
+              y: 22.0,
+              borderColor: '#ef4444',
+              strokeDashArray: 4,
+              width: '100%',
+              label: {
+                borderColor: '#ef4444',
+                style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
+                text: 'Upper Valuation Boundary (22.0)'
+              }
+            }
+          ]
+        }
+      };
+
+      if (charts.forwardPe) charts.forwardPe.destroy();
+      charts.forwardPe = new ApexCharts(document.querySelector("#forward-pe-chart"), options);
+      charts.forwardPe.render();
+    } else {
+      if (peValEl) peValEl.textContent = 'N/A';
+      if (peStatusEl) {
+        peStatusEl.className = 'stat-status status-normal';
+        peStatusEl.textContent = 'UNAVAILABLE';
+      }
+      if (peChartEl) peChartEl.style.display = 'none';
+      if (peFallbackEl) peFallbackEl.style.display = 'flex';
+    }
+
+    // Render Shiller CAPE Ratio
+    const capeData = indicators.cape_ratio || [];
+    const capeValEl = document.getElementById('cape-ratio-val');
+    const capeChartEl = document.getElementById('cape-ratio-chart');
+    const capeFallbackEl = document.getElementById('cape-ratio-fallback');
+
+    if (capeData.length > 0) {
+      if (capeChartEl) capeChartEl.style.display = 'block';
+      if (capeFallbackEl) capeFallbackEl.style.display = 'none';
+
+      const latest = capeData[capeData.length - 1];
+      const latestVal = latest.value;
+
+      if (capeValEl) {
+        capeValEl.textContent = latestVal.toFixed(2);
+      }
+
+      const capeSeries = capeData.map(item => [new Date(item.date).getTime(), item.value]);
+
+      const options = {
+        series: [{
+          name: 'Shiller CAPE',
+          data: capeSeries
+        }],
+        chart: {
+          type: 'area',
+          height: 400,
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#10b981'], // Green
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.35,
+            opacityTo: 0.05,
+            stops: [0, 95]
+          }
+        },
+        stroke: { curve: 'smooth', width: 2.5 },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: { formatter: (value) => value.toFixed(1) }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark',
+          y: { formatter: (value) => value.toFixed(2) }
+        }
+      };
+
+      if (charts.capeRatio) charts.capeRatio.destroy();
+      charts.capeRatio = new ApexCharts(document.querySelector("#cape-ratio-chart"), options);
+      charts.capeRatio.render();
+    } else {
+      if (capeValEl) capeValEl.textContent = 'N/A';
+      if (capeChartEl) capeChartEl.style.display = 'none';
+      if (capeFallbackEl) capeFallbackEl.style.display = 'flex';
+    }
   }
 
   // Hero Section Rendering (Market Regime Score & Sidebar Summary)

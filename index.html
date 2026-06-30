@@ -134,7 +134,7 @@
         </button>
         <button class="tab-btn" data-tab="fundamentals" id="tab-btn-fundamentals">
           <i data-lucide="bar-chart-2"></i>
-          <span>Fundamentals</span>
+          <span>Fundamentals & Valuation</span>
         </button>
       </nav>
 
@@ -713,6 +713,74 @@
                 <div id="revenue-growth-chart" class="chart-container" style="height: 400px;"></div>
                 <div id="revenue-growth-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
                   Configure FMP_API_KEY to enable Revenue Growth chart.
+                </div>
+              </div>
+            </div>
+
+            <!-- S&P 500 Forward P/E Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">VALUATION</span>
+                  <h2>S&P 500 Forward P/E</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="forward-pe-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="forward-pe-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-forward-pe">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>S&P 500 Forward P/E</h4>
+                      <p>The Forward Price-to-Earnings (P/E) ratio of the S&P 500. It measures the index price relative to the forecasted earnings per share for the next 12 months.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>Healthy (14 to 22):</strong> The market is reasonably valued relative to expected future corporate earnings.</li>
+                        <li><strong>Unhealthy (&lt; 14 or &gt; 22):</strong> Below 14 indicates severe undervaluation or low growth expectations; above 22 indicates expensive valuation / potential bubble territory.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="forward-pe-chart" class="chart-container" style="height: 400px;"></div>
+                <div id="forward-pe-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                  Configure FMP_API_KEY to enable Forward P/E chart.
+                </div>
+              </div>
+            </div>
+
+            <!-- Shiller CAPE Ratio Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">VALUATION</span>
+                  <h2>Shiller CAPE Ratio</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="cape-ratio-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-cape-ratio">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Shiller CAPE Ratio</h4>
+                      <p>The Cyclically Adjusted Price-to-Earnings (CAPE) ratio, also known as the Shiller P/E. It is computed by dividing the real price of the S&P 500 by the 10-year average of real earnings per share, adjusted for inflation.</p>
+                      <hr>
+                      <p><strong>Significance:</strong> Useful for assessing long-term valuation and future returns over 10-20 year horizons. Historically, a high CAPE ratio correlates with lower long-term annualized returns, and a low CAPE ratio with higher returns.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="cape-ratio-chart" class="chart-container" style="height: 400px;"></div>
+                <div id="cape-ratio-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                  Configure NASDAQ_DATA_LINK_API_KEY to enable Shiller CAPE Ratio chart.
                 </div>
               </div>
             </div>
