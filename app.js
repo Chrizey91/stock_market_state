@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderSentimentTab(marketData.indicators);
       renderMonetaryTab(marketData.indicators);
       renderEconomyTab(marketData.indicators);
+      renderFundamentalsTab(marketData.indicators);
       
     } catch (error) {
       console.error("Error loading market data:", error);
@@ -1184,6 +1185,206 @@ document.addEventListener('DOMContentLoaded', () => {
       if (charts.sectorHeatmap) charts.sectorHeatmap.destroy();
       charts.sectorHeatmap = new ApexCharts(document.querySelector("#sector-heatmap-chart"), opts);
       charts.sectorHeatmap.render();
+    }
+  }
+
+  // Fundamentals Tab Rendering
+  function renderFundamentalsTab(indicators) {
+    const epsData = indicators.eps_growth || [];
+    const revData = indicators.revenue_growth || [];
+
+    // Render EPS Growth
+    const epsValEl = document.getElementById('eps-growth-val');
+    const epsStatusEl = document.getElementById('eps-growth-status');
+    const epsChartEl = document.getElementById('eps-growth-chart');
+    const epsFallbackEl = document.getElementById('eps-growth-fallback');
+
+    if (epsData.length > 0) {
+      if (epsChartEl) epsChartEl.style.display = 'block';
+      if (epsFallbackEl) epsFallbackEl.style.display = 'none';
+
+      const latest = epsData[epsData.length - 1];
+      const latestVal = latest.value;
+
+      if (epsValEl) {
+        epsValEl.textContent = `${latestVal > 0 ? '+' : ''}${latestVal.toFixed(2)}%`;
+      }
+
+      if (epsStatusEl) {
+        epsStatusEl.className = 'stat-status';
+        if (latestVal > 0) {
+          epsStatusEl.textContent = 'EXPANSION (BULLISH)';
+          epsStatusEl.classList.add('status-complacent');
+        } else {
+          epsStatusEl.textContent = 'CONTRACTION (BEARISH)';
+          epsStatusEl.classList.add('status-panic');
+        }
+      }
+
+      const epsSeries = epsData.map(item => [new Date(item.date).getTime(), item.value]);
+
+      const options = {
+        series: [{
+          name: 'EPS Growth (YoY)',
+          data: epsSeries
+        }],
+        chart: {
+          type: 'area',
+          height: 400,
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#a78bfa'], // Purple
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.35,
+            opacityTo: 0.05,
+            stops: [0, 95]
+          }
+        },
+        stroke: { curve: 'smooth', width: 2.5 },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: { formatter: (value) => `${value.toFixed(1)}%` }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark',
+          y: { formatter: (value) => `${value.toFixed(2)}%` }
+        },
+        annotations: {
+          yaxis: [{
+            y: 0,
+            borderColor: '#ef4444',
+            strokeDashArray: 4,
+            width: '100%',
+            label: {
+              borderColor: '#ef4444',
+              style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
+              text: 'Growth Threshold (0.00%)'
+            }
+          }]
+        }
+      };
+
+      if (charts.epsGrowth) charts.epsGrowth.destroy();
+      charts.epsGrowth = new ApexCharts(document.querySelector("#eps-growth-chart"), options);
+      charts.epsGrowth.render();
+    } else {
+      if (epsValEl) epsValEl.textContent = 'N/A';
+      if (epsStatusEl) {
+        epsStatusEl.className = 'stat-status status-normal';
+        epsStatusEl.textContent = 'UNAVAILABLE';
+      }
+      if (epsChartEl) epsChartEl.style.display = 'none';
+      if (epsFallbackEl) epsFallbackEl.style.display = 'flex';
+    }
+
+    // Render Revenue Growth
+    const revValEl = document.getElementById('revenue-growth-val');
+    const revStatusEl = document.getElementById('revenue-growth-status');
+    const revChartEl = document.getElementById('revenue-growth-chart');
+    const revFallbackEl = document.getElementById('revenue-growth-fallback');
+
+    if (revData.length > 0) {
+      if (revChartEl) revChartEl.style.display = 'block';
+      if (revFallbackEl) revFallbackEl.style.display = 'none';
+
+      const latest = revData[revData.length - 1];
+      const latestVal = latest.value;
+
+      if (revValEl) {
+        revValEl.textContent = `${latestVal > 0 ? '+' : ''}${latestVal.toFixed(2)}%`;
+      }
+
+      if (revStatusEl) {
+        revStatusEl.className = 'stat-status';
+        if (latestVal > 0) {
+          revStatusEl.textContent = 'EXPANSION (BULLISH)';
+          revStatusEl.classList.add('status-complacent');
+        } else {
+          revStatusEl.textContent = 'CONTRACTION (BEARISH)';
+          revStatusEl.classList.add('status-panic');
+        }
+      }
+
+      const revSeries = revData.map(item => [new Date(item.date).getTime(), item.value]);
+
+      const options = {
+        series: [{
+          name: 'Revenue Growth (YoY)',
+          data: revSeries
+        }],
+        chart: {
+          type: 'area',
+          height: 400,
+          background: 'transparent',
+          foreColor: '#a1a1aa',
+          toolbar: { show: false },
+          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+        },
+        colors: ['#06b6d4'], // Cyan
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.35,
+            opacityTo: 0.05,
+            stops: [0, 95]
+          }
+        },
+        stroke: { curve: 'smooth', width: 2.5 },
+        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+        xaxis: {
+          type: 'datetime',
+          axisBorder: { show: false },
+          axisTicks: { show: false }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: { formatter: (value) => `${value.toFixed(1)}%` }
+        },
+        tooltip: {
+          x: { format: 'yyyy-MM-dd' },
+          theme: 'dark',
+          y: { formatter: (value) => `${value.toFixed(2)}%` }
+        },
+        annotations: {
+          yaxis: [{
+            y: 0,
+            borderColor: '#ef4444',
+            strokeDashArray: 4,
+            width: '100%',
+            label: {
+              borderColor: '#ef4444',
+              style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
+              text: 'Growth Threshold (0.00%)'
+            }
+          }]
+        }
+      };
+
+      if (charts.revenueGrowth) charts.revenueGrowth.destroy();
+      charts.revenueGrowth = new ApexCharts(document.querySelector("#revenue-growth-chart"), options);
+      charts.revenueGrowth.render();
+    } else {
+      if (revValEl) revValEl.textContent = 'N/A';
+      if (revStatusEl) {
+        revStatusEl.className = 'stat-status status-normal';
+        revStatusEl.textContent = 'UNAVAILABLE';
+      }
+      if (revChartEl) revChartEl.style.display = 'none';
+      if (revFallbackEl) revFallbackEl.style.display = 'flex';
     }
   }
 

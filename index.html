@@ -132,6 +132,10 @@
           <i data-lucide="bar-chart-3"></i>
           <span>Market Breadth</span>
         </button>
+        <button class="tab-btn" data-tab="fundamentals" id="tab-btn-fundamentals">
+          <i data-lucide="bar-chart-2"></i>
+          <span>Fundamentals</span>
+        </button>
       </nav>
 
       <!-- Tab Content Area -->
@@ -633,6 +637,83 @@
               </div>
               <div class="card-body" style="height: 320px;">
                 <div id="sector-heatmap-chart" class="chart-container"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Fundamentals Section -->
+        <section id="fundamentals-tab" class="tab-pane">
+          <div class="grid-layout cols-2">
+            <!-- S&P 500 EPS Growth Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">FUNDAMENTALS</span>
+                  <h2>S&P 500 EPS Growth (YoY)</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="eps-growth-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="eps-growth-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-eps-growth">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>S&P 500 EPS Growth</h4>
+                      <p>Year-over-Year (YoY) growth of aggregate S&P 500 Earnings Per Share (EPS), updated quarterly.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>Healthy (YoY > 0%):</strong> Corporate earnings are expanding.</li>
+                        <li><strong>Unhealthy (YoY &lt;= 0%):</strong> Corporate earnings are contracting.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="eps-growth-chart" class="chart-container" style="height: 400px;"></div>
+                <div id="eps-growth-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                  Configure FMP_API_KEY to enable EPS Growth chart.
+                </div>
+              </div>
+            </div>
+
+            <!-- S&P 500 Revenue Growth Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">FUNDAMENTALS</span>
+                  <h2>S&P 500 Revenue Growth (YoY)</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="revenue-growth-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="revenue-growth-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-revenue-growth">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>S&P 500 Revenue Growth</h4>
+                      <p>Year-over-Year (YoY) growth of aggregate S&P 500 Revenue, updated quarterly.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>Healthy (YoY > 0%):</strong> Corporate revenues are expanding.</li>
+                        <li><strong>Unhealthy (YoY &lt;= 0%):</strong> Corporate revenues are contracting.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="revenue-growth-chart" class="chart-container" style="height: 400px;"></div>
+                <div id="revenue-growth-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                  Configure FMP_API_KEY to enable Revenue Growth chart.
+                </div>
               </div>
             </div>
           </div>

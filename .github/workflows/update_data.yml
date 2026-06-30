@@ -38,6 +38,7 @@ jobs:
       - name: Run Data Update Script
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
         run: python scripts/update_data.py
 
       - name: Commit and Push Changes

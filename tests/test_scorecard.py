@@ -19,7 +19,9 @@ class TestScorecard(unittest.TestCase):
             "high_yield_spread": [{"date": "2026-06-29", "value": 3.5}],
             "m2_growth": [{"date": "2026-06-29", "value": 2.0}],
             "equal_vs_cap_weight": [{"date": "2026-06-29", "rsp_return": 4.0, "spy_return": 6.0, "spread": -2.0}],
-            "sector_leadership": {"above_200d": 9, "total": 11, "sectors": []}
+            "sector_leadership": {"above_200d": 9, "total": 11, "sectors": []},
+            "eps_growth": [{"date": "2026-06-29", "value": 5.0}],
+            "revenue_growth": [{"date": "2026-06-29", "value": 3.0}]
         }
         
         scorecard, health_score, health_total = evaluate_scorecard(indicators)
@@ -34,14 +36,16 @@ class TestScorecard(unittest.TestCase):
         # m2_growth: healthy (2.0 >= 0.0)
         # equal_vs_cap_weight: healthy (-2.0 within +/-5%)
         # sector_leadership: healthy (9 >= 8)
-        # Total healthy = 9
-        # Total available = 9 (others are unavailable)
-        self.assertEqual(health_score, 9)
-        self.assertEqual(health_total, 9)
+        # eps_growth: healthy (5.0 > 0%)
+        # revenue_growth: healthy (3.0 > 0%)
+        # Total healthy = 11
+        # Total available = 11 (others are unavailable)
+        self.assertEqual(health_score, 11)
+        self.assertEqual(health_total, 11)
         
         # Verify status details
         for item in scorecard:
-            if item["id"] in ["sp500_trend", "sp500_momentum", "sp500_breadth", "sp500_ad_line", "vix", "hy_spread", "m2_growth", "equal_vs_cap_weight", "sector_leadership"]:
+            if item["id"] in ["sp500_trend", "sp500_momentum", "sp500_breadth", "sp500_ad_line", "vix", "hy_spread", "m2_growth", "equal_vs_cap_weight", "sector_leadership", "eps_growth", "revenue_growth"]:
                 self.assertEqual(item["status"], "healthy")
                 if item["id"] == "sp500_ad_line":
                     self.assertEqual(item["value"], "Rising")
@@ -49,6 +53,10 @@ class TestScorecard(unittest.TestCase):
                     self.assertEqual(item["value"], "-2.00%")
                 if item["id"] == "sector_leadership":
                     self.assertEqual(item["value"], "9/11")
+                if item["id"] == "eps_growth":
+                    self.assertEqual(item["value"], "+5.00%")
+                if item["id"] == "revenue_growth":
+                    self.assertEqual(item["value"], "+3.00%")
             else:
                 self.assertEqual(item["status"], "unavailable")
                 self.assertIsNone(item["value"])
@@ -63,7 +71,9 @@ class TestScorecard(unittest.TestCase):
             "high_yield_spread": [{"date": "2026-06-29", "value": 5.5}],
             "m2_growth": [{"date": "2026-06-29", "value": -1.0}],
             "equal_vs_cap_weight": [{"date": "2026-06-29", "rsp_return": 4.0, "spy_return": 10.0, "spread": -6.0}],
-            "sector_leadership": {"above_200d": 5, "total": 11, "sectors": []}
+            "sector_leadership": {"above_200d": 5, "total": 11, "sectors": []},
+            "eps_growth": [{"date": "2026-06-29", "value": -1.5}],
+            "revenue_growth": [{"date": "2026-06-29", "value": -2.0}]
         }
         
         scorecard, health_score, health_total = evaluate_scorecard(indicators)
@@ -78,14 +88,16 @@ class TestScorecard(unittest.TestCase):
         # m2_growth: unhealthy (-1.0 < 0.0)
         # equal_vs_cap_weight: unhealthy (-6.0 outside +/-5%)
         # sector_leadership: unhealthy (5 < 8)
+        # eps_growth: unhealthy (-1.5 <= 0%)
+        # revenue_growth: unhealthy (-2.0 <= 0%)
         # Total healthy = 0
-        # Total available = 9
+        # Total available = 11
         self.assertEqual(health_score, 0)
-        self.assertEqual(health_total, 9)
+        self.assertEqual(health_total, 11)
         
         # Verify status details
         for item in scorecard:
-            if item["id"] in ["sp500_trend", "sp500_momentum", "sp500_breadth", "sp500_ad_line", "vix", "hy_spread", "m2_growth", "equal_vs_cap_weight", "sector_leadership"]:
+            if item["id"] in ["sp500_trend", "sp500_momentum", "sp500_breadth", "sp500_ad_line", "vix", "hy_spread", "m2_growth", "equal_vs_cap_weight", "sector_leadership", "eps_growth", "revenue_growth"]:
                 self.assertEqual(item["status"], "unhealthy")
                 if item["id"] == "sp500_ad_line":
                     self.assertEqual(item["value"], "Falling")

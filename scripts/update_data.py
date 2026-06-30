@@ -2,6 +2,8 @@ import os
 import json
 import logging
 import random
+import calendar
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 import yfinance as yf
@@ -385,6 +387,183 @@ def fetch_sp500_new_highs_lows():
     df_all_close = get_sp500_data()
     return calculate_new_highs_lows(df_all_close)
 
+def compute_yoy_growth(data, key_name):
+    # Sort chronologically by date
+    sorted_data = sorted(data, key=lambda x: x['date'])
+    
+    parsed_data = []
+    for item in sorted_data:
+        try:
+            dt = datetime.strptime(item['date'], '%Y-%m-%d')
+            val = item.get(key_name)
+            if val is not None:
+                parsed_data.append({
+                    "date_obj": dt,
+                    "date": item['date'],
+                    "val": float(val)
+                })
+        except Exception as e:
+            logger.warning(f"Error parsing date or value in YoY growth calculation for {key_name}: {e}")
+            
+    growth_points = []
+    for i, current in enumerate(parsed_data):
+        current_dt = current["date_obj"]
+        target_year = current_dt.year - 1
+        
+        # Find the closest observation in target_year (matching quarter)
+        prev_year_item = None
+        min_diff_days = 45 # max 45 days diff to be considered the same quarter
+        for prev in parsed_data[:i]:
+            prev_dt = prev["date_obj"]
+            if prev_dt.year == target_year:
+                try:
+                    target_dt = current_dt.replace(year=target_year)
+                    diff_days = abs((prev_dt - target_dt).days)
+                except ValueError:
+                    diff_days = abs((prev_dt - (current_dt - timedelta(days=365))).days)
+                if diff_days < min_diff_days:
+                    min_diff_days = diff_days
+                    prev_year_item = prev
+                    
+        if prev_year_item:
+            prev_val = prev_year_item["val"]
+            if prev_val != 0:
+                yoy_growth = ((current["val"] - prev_val) / abs(prev_val)) * 100.0
+                growth_points.append({
+                    "date": current["date"],
+                    "value": round(yoy_growth, 2)
+                })
+    return growth_points
+
+def _quarter_key(dt):
+    """Return a (year, quarter) tuple for a datetime object."""
+    return (dt.year, (dt.month - 1) // 3 + 1)
+
+
+def _quarter_date_label(year, quarter):
+    """Return a date string like '2025-03-31' representing the quarter end."""
+    month = quarter * 3
+
+    last_day = calendar.monthrange(year, month)[1]
+    return f"{year}-{month:02d}-{last_day:02d}"
+
+
+def fetch_sp500_earnings_fmp():
+    """Fetch S&P 500 aggregate earnings via FMP's stable income-statement API.
+
+    Strategy (free-tier friendly, ~30 API calls):
+    1. Use a fixed list of the top-30 S&P 500 companies by market cap.
+       These represent ~50% of the index weight and serve as a reliable proxy.
+    2. For each company, call /stable/income-statement?period=quarter&limit=5
+       to get the last 5 quarters of EPS and revenue data.
+    3. Aggregate by calendar quarter (sum EPS, sum revenue).
+    4. Compute YoY growth on the quarterly aggregates.
+    """
+    logger.info("Fetching S&P 500 aggregate earnings data from Financial Modeling Prep...")
+    api_key = os.environ.get("FMP_API_KEY")
+    if not api_key:
+        logger.warning("FMP_API_KEY environment variable is absent. Skipping FMP earnings.")
+        return [], []
+
+    # Top 30 S&P 500 companies by market cap (stable representative set)
+    TOP_30_TICKERS = [
+        "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "LLY", "AVGO",
+        "JPM", "TSLA", "UNH", "XOM", "V", "MA", "COST", "PG",
+        "JNJ", "HD", "ABBV", "WMT", "NFLX", "CRM", "BAC", "ORCL",
+        "CVX", "MRK", "KO", "PEP", "AMD", "ADBE",
+    ]
+
+    try:
+        all_records = []
+        failed_count = 0
+
+        for ticker in TOP_30_TICKERS:
+            url = (
+                f"https://financialmodelingprep.com/stable/income-statement"
+                f"?symbol={ticker}&period=quarter&limit=5&apikey={api_key}"
+            )
+            try:
+                response = requests.get(url, timeout=15)
+                if response.status_code == 403:
+                    logger.warning(f"FMP API returned 403 for {ticker}. Skipping all FMP earnings.")
+                    return [], []
+                if response.status_code == 402:
+                    logger.warning(f"FMP API returned 402 (payment required) for {ticker}. Skipping ticker.")
+                    continue
+                response.raise_for_status()
+                data = response.json()
+                if isinstance(data, list):
+                    for item in data:
+                        date_str = item.get("date")
+                        eps = item.get("epsDiluted")
+                        revenue = item.get("revenue")
+                        if date_str and eps is not None and revenue is not None:
+                            try:
+                                all_records.append({
+                                    "symbol": ticker,
+                                    "date": datetime.strptime(date_str, '%Y-%m-%d'),
+                                    "eps": float(eps),
+                                    "revenue": float(revenue),
+                                })
+                            except (ValueError, TypeError):
+                                continue
+            except Exception as e:
+                logger.warning(f"FMP: failed to fetch income statement for {ticker}: {e}")
+                failed_count += 1
+                if failed_count >= 5:
+                    logger.warning("FMP: too many failures, aborting earnings fetch.")
+                    return [], []
+
+        logger.info(f"FMP: fetched {len(all_records)} quarterly records from {len(TOP_30_TICKERS)} companies.")
+
+        if not all_records:
+            logger.warning("FMP: no earnings records retrieved.")
+            return [], []
+
+        # Aggregate by calendar quarter (sum EPS, sum revenue)
+        quarterly = defaultdict(lambda: {"eps": 0.0, "revenue": 0.0, "count": 0})
+        for item in all_records:
+            qk = _quarter_key(item["date"])
+            quarterly[qk]["eps"] += item["eps"]
+            quarterly[qk]["revenue"] += item["revenue"]
+            quarterly[qk]["count"] += 1
+
+        # Drop incomplete quarters (where fewer than half the median companies reported)
+        counts = [v["count"] for v in quarterly.values()]
+        median_count = sorted(counts)[len(counts) // 2] if counts else 0
+        min_threshold = max(median_count // 2, 2)
+
+        # Convert to sorted list for YoY calculation, skipping incomplete quarters
+        quarterly_data = []
+        for (year, quarter), vals in sorted(quarterly.items()):
+            date_label = _quarter_date_label(year, quarter)
+            if vals["count"] < min_threshold:
+                logger.info(
+                    f"  Q{quarter}/{year}: SKIPPED (only {vals['count']} companies, "
+                    f"threshold={min_threshold})"
+                )
+                continue
+            quarterly_data.append({
+                "date": date_label,
+                "eps": round(vals["eps"], 2),
+                "revenue": round(vals["revenue"], 2),
+            })
+            logger.info(
+                f"  Q{quarter}/{year}: EPS={vals['eps']:.2f}, "
+                f"Revenue={vals['revenue']:.0f}, Companies={vals['count']}"
+            )
+
+        # Compute YoY growth using existing helper
+        eps_growth = compute_yoy_growth(quarterly_data, "eps")
+        revenue_growth = compute_yoy_growth(quarterly_data, "revenue")
+
+        logger.info(f"FMP: computed {len(eps_growth)} EPS growth and {len(revenue_growth)} revenue growth points.")
+        return eps_growth, revenue_growth
+
+    except Exception as e:
+        logger.warning(f"Failed to fetch S&P 500 earnings from FMP: {e}")
+        return [], []
+
 def generate_mock_fear_greed(days=365):
     end_date = datetime.now()
     data_points = []
@@ -753,22 +932,48 @@ def evaluate_scorecard(indicators):
         "value": display_val
     })
     
-    # 6. eps_growth (unimplemented)
+    # 6. eps_growth
+    eps_data = indicators.get("eps_growth", [])
+    if eps_data:
+        latest = eps_data[-1]
+        val = latest.get("value")
+        if val is not None:
+            status = "healthy" if val > 0.0 else "unhealthy"
+            display_val = f"{val:+.2f}%" if val != 0 else "0.00%"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
     scorecard.append({
         "id": "eps_growth",
         "label": "S&P 500 EPS Growth",
         "category": "Earnings",
-        "status": "unavailable",
-        "value": None
+        "status": status,
+        "value": display_val
     })
     
-    # 7. revenue_growth (unimplemented)
+    # 7. revenue_growth
+    rev_data = indicators.get("revenue_growth", [])
+    if rev_data:
+        latest = rev_data[-1]
+        val = latest.get("value")
+        if val is not None:
+            status = "healthy" if val > 0.0 else "unhealthy"
+            display_val = f"{val:+.2f}%" if val != 0 else "0.00%"
+        else:
+            status = "unavailable"
+            display_val = None
+    else:
+        status = "unavailable"
+        display_val = None
     scorecard.append({
         "id": "revenue_growth",
         "label": "S&P 500 Revenue Growth",
         "category": "Earnings",
-        "status": "unavailable",
-        "value": None
+        "status": status,
+        "value": display_val
     })
     
     # 8. forward_pe (unimplemented)
@@ -1002,6 +1207,16 @@ def main():
                 updated_data["indicators"]["sp500_new_highs_lows"] = highs_lows_list + [new_hl]
         else:
             updated_data["indicators"]["sp500_new_highs_lows"] = []
+
+    # Fetch S&P 500 earnings data (YoY EPS and Revenue growth) from FMP
+    try:
+        eps_growth, revenue_growth = fetch_sp500_earnings_fmp()
+        updated_data["indicators"]["eps_growth"] = eps_growth
+        updated_data["indicators"]["revenue_growth"] = revenue_growth
+    except Exception as e:
+        logger.warning(f"Failed to fetch/compute S&P 500 earnings: {e}")
+        updated_data["indicators"]["eps_growth"] = []
+        updated_data["indicators"]["revenue_growth"] = []
 
     # Fetch Sector ETFs leadership and performance heatmap
     try:
