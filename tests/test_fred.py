@@ -137,5 +137,15 @@ class TestFredApiAndFallback(unittest.TestCase):
         self.assertEqual(res_api, res_csv)
         self.assertTrue(len(res_api) > 0)
 
+    def test_build_fred_fetchers(self):
+        from scripts.pipeline.adapters.fred import build_fred_fetchers
+        config = MagicMock()
+        config.fred_api_key = "dummy_key"
+        fetchers = build_fred_fetchers(config)
+        keys = [f["key"] for f in fetchers]
+        self.assertIn("ig_spread", keys)
+        self.assertIn("fed_balance_sheet", keys)
+        self.assertIn("bank_lending", keys)
+
 if __name__ == '__main__':
     unittest.main()

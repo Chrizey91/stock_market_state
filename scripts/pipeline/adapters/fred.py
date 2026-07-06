@@ -122,12 +122,14 @@ def build_fred_fetchers(config):
     """Build FRED indicator fetchers."""
     fetchers = []
 
-    # Standard FRED indicators mapping
     fred_configs = {
         "fed_funds": "FEDFUNDS",
         "treasury_10y": "DGS10",
         "yield_curve": "T10Y2Y",
-        "high_yield_spread": "BAMLH0A0HYM2"
+        "high_yield_spread": "BAMLH0A0HYM2",
+        "ig_spread": "BAMLC0A4CBBB",
+        "fed_balance_sheet": "WALCL",
+        "bank_lending": "TOTLL"
     }
 
     for key, series_id in fred_configs.items():
