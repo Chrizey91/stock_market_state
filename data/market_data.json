@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-06T20:15:53.946766+00:00",
+  "last_updated": "2026-07-06T20:26:37.868656+00:00",
   "indicators": {
     "vix": [
       {
@@ -1008,7 +1008,7 @@
       },
       {
         "date": "2026-07-06",
-        "value": 15.64
+        "value": 15.59
       }
     ],
     "sp500_trend": [
@@ -4528,7 +4528,7 @@
       },
       {
         "date": "2026-07-06",
-        "value": 11731
+        "value": 11730
       }
     ],
     "sp500_new_highs_lows": [
@@ -28787,7 +28787,7 @@
       },
       {
         "date": "2026-07-06",
-        "value": 0.225
+        "value": 0.224
       }
     ]
   },
@@ -29862,10 +29862,10 @@
     },
     {
       "date": "2026-07-06",
-      "value": 74.88
+      "value": 74.93
     }
   ],
-  "market_regime_score": 74.88,
+  "market_regime_score": 74.93,
   "scorecard": [
     {
       "id": "sp500_trend",
@@ -29928,7 +29928,7 @@
       "label": "VIX",
       "category": "Volatility",
       "status": "healthy",
-      "value": 15.64
+      "value": 15.59
     },
     {
       "id": "hy_spread",
