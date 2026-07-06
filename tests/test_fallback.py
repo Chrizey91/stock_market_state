@@ -216,6 +216,9 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(saved_data["indicators"]["sector_heatmap"], [])
         self.assertEqual(saved_data["indicators"]["forward_pe"], [])
         self.assertEqual(saved_data["indicators"]["cape_ratio"], [])
+        self.assertEqual(saved_data["indicators"]["ig_spread"], [])
+        self.assertEqual(saved_data["indicators"]["fed_balance_sheet"], [])
+        self.assertEqual(saved_data["indicators"]["bank_lending"], [])
 
     @patch('scripts.update_data.load_existing_data')
     @patch('scripts.update_data.save_data')
@@ -301,6 +304,9 @@ class TestDataPipelineFallback(unittest.TestCase):
         self.assertEqual(saved_data["indicators"]["revenue_growth"], [{"date": today_str, "value": 3.0}])
         self.assertEqual(saved_data["indicators"]["forward_pe"], [{"date": today_str, "value": 18.0}])
         self.assertEqual(saved_data["indicators"]["cape_ratio"], [{"date": today_str, "value": 33.1}])
+        self.assertEqual(saved_data["indicators"]["ig_spread"], [{"date": today_str, "value": 4.5}])
+        self.assertEqual(saved_data["indicators"]["fed_balance_sheet"], [{"date": today_str, "value": 4.5}])
+        self.assertEqual(saved_data["indicators"]["bank_lending"], [{"date": today_str, "value": 4.5}])
 
 if __name__ == '__main__':
     unittest.main()

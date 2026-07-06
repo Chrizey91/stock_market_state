@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const yieldCurve = indicators.yield_curve || [];
 
     // Helper to build line charts
-    const buildChartOptions = (containerId, name, dataPoints, color, zeroLineLabel = null) => {
+    const buildChartOptions = (containerId, name, dataPoints, color, zeroLineLabel = null, valueType = 'percent') => {
       const chartSeries = dataPoints.map(item => [new Date(item.date).getTime(), item.value]);
       
       const options = {
@@ -639,12 +639,25 @@ document.addEventListener('DOMContentLoaded', () => {
         yaxis: {
           tickAmount: 5,
           labels: {
-            formatter: (value) => value.toFixed(2) + '%'
+            formatter: (value) => {
+              if (valueType === 'percent') return value.toFixed(2) + '%';
+              if (valueType === 'dollar_m') return '$' + (value / 1000000).toFixed(2) + 'T';
+              if (valueType === 'dollar_b') return '$' + (value / 1000).toFixed(2) + 'T';
+              return value.toFixed(2);
+            }
           }
         },
         tooltip: {
           x: {
             format: 'yyyy-MM-dd'
+          },
+          y: {
+            formatter: (value) => {
+              if (valueType === 'percent') return value.toFixed(2) + '%';
+              if (valueType === 'dollar_m') return '$' + (value / 1000000).toFixed(3) + 'T';
+              if (valueType === 'dollar_b') return '$' + (value / 1000).toFixed(3) + 'T';
+              return value.toFixed(2);
+            }
           },
           theme: 'dark'
         }
@@ -706,12 +719,86 @@ document.addEventListener('DOMContentLoaded', () => {
       charts.m2Growth = new ApexCharts(document.querySelector("#m2growth-chart"), opts);
       charts.m2Growth.render();
     }
+
+    // Render High Yield Credit Spread Chart
+    const highYieldSpread = indicators.high_yield_spread || [];
+    if (highYieldSpread.length > 0) {
+      const opts = buildChartOptions("#highyield-chart", "High Yield Credit Spread", highYieldSpread, "#f87171", null, "percent");
+      opts.annotations = {
+        yaxis: [
+          {
+            y: 4.0,
+            borderColor: '#fbbf24',
+            strokeDashArray: 4,
+            width: '100%',
+            label: {
+              borderColor: '#fbbf24',
+              style: { color: '#000', background: '#fbbf24', fontWeight: 600 },
+              text: 'Moderate Stress (4.0%)'
+            }
+          },
+          {
+            y: 6.0,
+            borderColor: '#ef4444',
+            strokeDashArray: 4,
+            width: '100%',
+            label: {
+              borderColor: '#ef4444',
+              style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
+              text: 'High Stress (6.0%)'
+            }
+          }
+        ]
+      };
+      if (charts.highYieldSpread) charts.highYieldSpread.destroy();
+      charts.highYieldSpread = new ApexCharts(document.querySelector("#highyield-chart"), opts);
+      charts.highYieldSpread.render();
+    }
+
+    // Render Investment Grade Credit Spread Chart
+    const igSpread = indicators.ig_spread || [];
+    if (igSpread.length > 0) {
+      const opts = buildChartOptions("#igspread-chart", "Investment Grade Credit Spread", igSpread, "#fca5a5", null, "percent");
+      opts.annotations = {
+        yaxis: [{
+          y: 2.0,
+          borderColor: '#ef4444',
+          strokeDashArray: 4,
+          width: '100%',
+          label: {
+            borderColor: '#ef4444',
+            style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
+            text: 'Systemic Stress (2.0%) - Widening signals risk beyond junk bonds'
+          }
+        }]
+      };
+      if (charts.igSpread) charts.igSpread.destroy();
+      charts.igSpread = new ApexCharts(document.querySelector("#igspread-chart"), opts);
+      charts.igSpread.render();
+    }
+
+    // Render Fed Balance Sheet Chart
+    const fedBalanceSheet = indicators.fed_balance_sheet || [];
+    if (fedBalanceSheet.length > 0) {
+      const opts = buildChartOptions("#fedbalance-chart", "Fed Balance Sheet Assets", fedBalanceSheet, "#60a5fa", null, "dollar_m");
+      if (charts.fedBalanceSheet) charts.fedBalanceSheet.destroy();
+      charts.fedBalanceSheet = new ApexCharts(document.querySelector("#fedbalance-chart"), opts);
+      charts.fedBalanceSheet.render();
+    }
+
+    // Render Bank Lending Chart
+    const bankLending = indicators.bank_lending || [];
+    if (bankLending.length > 0) {
+      const opts = buildChartOptions("#banklending-chart", "Commercial Bank Lending", bankLending, "#22d3ee", null, "dollar_b");
+      if (charts.bankLending) charts.bankLending.destroy();
+      charts.bankLending = new ApexCharts(document.querySelector("#banklending-chart"), opts);
+      charts.bankLending.render();
+    }
   }
 
   // Economy & Internals Tab Rendering
   function renderEconomyTab(indicators) {
     const ismPmi = indicators.ism_pmi || [];
-    const highYieldSpread = indicators.high_yield_spread || [];
 
     // Render ISM Manufacturing PMI Chart
     if (ismPmi.length > 0) {
@@ -764,72 +851,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (charts.ismPmi) charts.ismPmi.destroy();
       charts.ismPmi = new ApexCharts(document.querySelector("#ism-pmi-chart"), opts);
       charts.ismPmi.render();
-    }
-
-    // Render High Yield Credit Spread Chart
-    if (highYieldSpread.length > 0) {
-      const hySeries = highYieldSpread.map(item => [new Date(item.date).getTime(), item.value]);
-      const opts = {
-        series: [{
-          name: 'High Yield Credit Spread',
-          data: hySeries
-        }],
-        chart: {
-          type: 'line',
-          height: '100%',
-          background: 'transparent',
-          foreColor: '#a1a1aa',
-          toolbar: { show: false },
-          animations: { enabled: true, easing: 'easeinout', speed: 800 }
-        },
-        colors: ['#f87171'],
-        stroke: { curve: 'smooth', width: 2.5 },
-        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
-        xaxis: {
-          type: 'datetime',
-          axisBorder: { show: false },
-          axisTicks: { show: false }
-        },
-        yaxis: {
-          tickAmount: 5,
-          labels: {
-            formatter: (value) => value.toFixed(2) + '%'
-          }
-        },
-        tooltip: {
-          x: { format: 'yyyy-MM-dd' },
-          theme: 'dark'
-        },
-        annotations: {
-          yaxis: [
-            {
-              y: 4.0,
-              borderColor: '#fbbf24',
-              strokeDashArray: 4,
-              width: '100%',
-              label: {
-                borderColor: '#fbbf24',
-                style: { color: '#000', background: '#fbbf24', fontWeight: 600 },
-                text: 'Moderate Stress (4.0%)'
-              }
-            },
-            {
-              y: 6.0,
-              borderColor: '#ef4444',
-              strokeDashArray: 4,
-              width: '100%',
-              label: {
-                borderColor: '#ef4444',
-                style: { color: '#fff', background: '#ef4444', fontWeight: 600 },
-                text: 'High Stress (6.0%)'
-              }
-            }
-          ]
-        }
-      };
-      if (charts.highYieldSpread) charts.highYieldSpread.destroy();
-      charts.highYieldSpread = new ApexCharts(document.querySelector("#highyield-chart"), opts);
-      charts.highYieldSpread.render();
     }
 
     // Render S&P 500 Breadth Chart

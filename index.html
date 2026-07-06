@@ -126,7 +126,7 @@
         </button>
         <button class="tab-btn" data-tab="monetary" id="tab-btn-monetary">
           <i data-lucide="landmark"></i>
-          <span>Monetary & Liquidity</span>
+          <span>Credit & Liquidity</span>
         </button>
         <button class="tab-btn" data-tab="economy" id="tab-btn-economy">
           <i data-lucide="bar-chart-3"></i>
@@ -435,6 +435,114 @@
                 <div id="m2growth-chart" class="chart-container"></div>
               </div>
             </div>
+
+            <!-- High Yield Credit Spread -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">CREDIT MARKET RISK</span>
+                  <h2>High Yield Credit Spread</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-highyield">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>High Yield Option-Adjusted Spread</h4>
+                      <p>The yield difference between below-investment-grade (junk) corporate bonds and risk-free Treasury bonds.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&lt; 4.0% (Low Stress):</strong> Indicates stable business conditions, high market confidence, and easy borrowing access.</li>
+                        <li><strong>4.0% - 6.0% (Moderate Stress):</strong> Indicates tightening financial conditions and rising corporate funding pressures.</li>
+                        <li><strong>&gt; 6.0% (High Stress):</strong> Indicates significant credit distress, rising default expectations, and looming economic downturns.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="highyield-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- Investment Grade Credit Spread -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">CREDIT MARKET RISK</span>
+                  <h2>Investment Grade Credit Spread</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-igspread">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Investment Grade Option-Adjusted Spread</h4>
+                      <p>The yield difference between investment-grade corporate bonds and risk-free Treasury bonds.</p>
+                      <hr>
+                      <p><strong>Significance:</strong> Widening investment-grade spreads signal institutional funding stress and systemic credit risk that extends beyond junk bonds, indicating a broader contraction in credit availability.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="igspread-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- Fed Balance Sheet -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">LIQUIDITY</span>
+                  <h2>Fed Balance Sheet</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-fedbalance">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Fed Balance Sheet (WALCL)</h4>
+                      <p>Total assets held by the Federal Reserve. A key indicator of central bank liquidity injections (Quantitative Easing) or withdrawals (Quantitative Tightening).</p>
+                      <hr>
+                      <p><strong>Relationship to Liquidity:</strong> Expanding Fed assets inject reserves and liquidity into the banking system, which typically supports asset prices and lowers yields. A contracting balance sheet drains liquidity, acting as a headwind for risky assets.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="fedbalance-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- Bank Lending -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">LIQUIDITY</span>
+                  <h2>Commercial Bank Lending</h2>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-banklending">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Total Loans & Leases in Bank Credit (TOTLL)</h4>
+                      <p>The total volume of loans and leases extended by commercial banks. It measures credit expansion in the real economy.</p>
+                      <hr>
+                      <p><strong>Relationship to Liquidity:</strong> Lending is the primary mechanism of money and liquidity creation in the fractional reserve banking system. Rising bank lending indicates robust economic liquidity and credit expansion. Flattening or declining bank lending indicates tightening bank standards, credit contraction, and potential economic slowdown.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="banklending-chart" class="chart-container"></div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -467,36 +575,6 @@
               </div>
               <div class="card-body">
                 <div id="ism-pmi-chart" class="chart-container"></div>
-              </div>
-            </div>
-
-            <!-- High Yield Credit Spread -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">CREDIT MARKET RISK</span>
-                  <h2>High Yield Credit Spread</h2>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-highyield">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>High Yield Option-Adjusted Spread</h4>
-                      <p>The yield difference between below-investment-grade (junk) corporate bonds and risk-free Treasury bonds.</p>
-                      <hr>
-                      <ul>
-                        <li><strong>&lt; 4.0% (Low Stress):</strong> Indicates stable business conditions, high market confidence, and easy borrowing access.</li>
-                        <li><strong>4.0% - 6.0% (Moderate Stress):</strong> Indicates tightening financial conditions and rising corporate funding pressures.</li>
-                        <li><strong>&gt; 6.0% (High Stress):</strong> Indicates significant credit distress, rising default expectations, and looming economic downturns.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="highyield-chart" class="chart-container"></div>
               </div>
             </div>
 
