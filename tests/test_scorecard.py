@@ -1,6 +1,7 @@
 import unittest
 import sys
 import os
+from unittest.mock import patch
 
 # Add the project root and scripts directory to python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -142,6 +143,61 @@ class TestScorecard(unittest.TestCase):
             if item["id"] == "sp500_ad_line":
                 self.assertEqual(item["status"], "unavailable")
                 self.assertIsNone(item["value"])
+
+    @patch('scripts.pipeline.registry.build_registry')
+    def test_refresh_all_scorecard_and_regime(self, mock_build_registry):
+        from scripts.pipeline.registry import refresh_all
+        from scripts.pipeline.config import PipelineConfig
+        import pandas as pd
+        
+        # Setup dummy fetchers in registry
+        mock_build_registry.return_value = [
+            {
+                "key": "vix",
+                "mode": "replace",
+                "fetcher": lambda: [{"date": "2026-06-29", "value": 15.0}]
+            },
+            {
+                "key": "high_yield_spread",
+                "mode": "replace",
+                "fetcher": lambda: [{"date": "2026-06-29", "value": 3.5}]
+            },
+            {
+                "key": "yield_curve",
+                "mode": "replace",
+                "fetcher": lambda: [{"date": "2026-06-29", "value": 1.0}]
+            },
+            {
+                "key": "sp500_breadth",
+                "mode": "replace",
+                "fetcher": lambda: [{"date": "2026-06-29", "value": 75.0}]
+            },
+            {
+                "key": "m2_growth",
+                "mode": "replace",
+                "fetcher": lambda: [{"date": "2026-06-29", "value": 2.0}]
+            }
+        ]
+        
+        config = PipelineConfig(
+            data_path="dummy.json",
+            fred_api_key="key",
+            fmp_api_key="key",
+            nasdaq_api_key="key"
+        )
+        
+        # Mock S&P 500 DataFrame
+        df_sp500 = pd.DataFrame()
+        
+        result = refresh_all(config, existing_data={}, df_sp500=df_sp500)
+        
+        self.assertIn("scorecard", result)
+        self.assertIn("health_score", result)
+        self.assertIn("health_total", result)
+        self.assertIn("market_regime_score", result)
+        
+        # Verify that market_regime_score matches the latest market_regime value
+        self.assertEqual(result["market_regime_score"], result["market_regime"][-1]["value"])
 
 if __name__ == '__main__':
     unittest.main()

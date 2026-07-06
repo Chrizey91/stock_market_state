@@ -66,6 +66,7 @@ def refresh_all(config, existing_data, df_sp500=None):
         "last_updated": datetime.now(timezone.utc).isoformat(),
         "indicators": {},
         "market_regime": [],
+        "market_regime_score": 50.0,
         "scorecard": [],
         "health_score": 0,
         "health_total": 0
@@ -103,6 +104,10 @@ def refresh_all(config, existing_data, df_sp500=None):
 
     # Recompute derived metrics
     updated_data["market_regime"] = calculate_market_regime_index(updated_data["indicators"])
+    if updated_data["market_regime"]:
+        updated_data["market_regime_score"] = updated_data["market_regime"][-1]["value"]
+    else:
+        updated_data["market_regime_score"] = 50.0
 
     scorecard, h_score, h_total = evaluate_scorecard(updated_data["indicators"])
     updated_data["scorecard"] = scorecard
