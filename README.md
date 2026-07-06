@@ -4,18 +4,51 @@ A clean, modern, high-level overview of the stock market based on key macroecono
 
 ## Running Locally
 
-1. Install Python dependencies:
+1. **Install dependencies:**
    ```bash
    poetry install
    ```
-2. Update market data:
+
+2. **Configure API Keys (Optional but Recommended):**
+   Create a `.env` file in the root directory and add your API keys (see [API Configuration](#api-configuration-layered-fallback) below for details):
+   ```bash
+   FRED_API_KEY="your_fred_api_key"
+   FMP_API_KEY="your_fmp_api_key"
+   NASDAQ_DATA_LINK_API_KEY="your_nasdaq_data_link_api_key"
+   ```
+
+3. **Fetch Market Data:**
+   Run the backend pipeline to generate the latest `market_data.json`:
    ```bash
    poetry run python scripts/update_data.py
    ```
-3. Run local server:
+
+4. **Run Local Server:**
+   Serve the static frontend files locally:
    ```bash
    python -m http.server 8000
    ```
+   *Then open `http://localhost:8000` in your browser.*
+
+5. **Run Tests:**
+   Execute the test suite to ensure the data pipeline is functioning correctly:
+   ```bash
+   poetry run python -m unittest discover tests
+   ```
+
+## Architecture & Codebase
+
+The backend data pipeline is built using a modular, "deep module" architecture, separating side-effects (fetching data) from pure logic (calculations).
+
+The core logic lives in `scripts/pipeline/`:
+- **`adapters/`**: Network interfaces for fetching data from yfinance, FRED, FMP, and CNN Fear & Greed.
+- **`indicators.py`**: Pure calculation functions for market breadth, A/D lines, etc.
+- **`regime.py`**: Calculates the overall market regime index based on yields and volatility.
+- **`scorecard.py`**: Evaluates individual indicators against thresholds to compute a Health Scorecard.
+- **`fallback.py`**: Provides robust fallback policies (e.g. duplicate last value) if APIs fail.
+- **`registry.py`**: The central orchestrator that iterates through all adapters to build the final JSON.
+
+`scripts/update_data.py` acts as a thin CLI wrapper around the pipeline package.
 
 ## API Configuration (Layered Fallback)
 
@@ -29,17 +62,8 @@ To enable the full S&P 500 Health Scorecard and macroeconomic indicators, config
 
 ### Setup Instructions
 
-#### Local Development
-Create a `.env` file or export the variables in your shell before running the update script:
-```bash
-export FRED_API_KEY="your_fred_api_key"
-export FMP_API_KEY="your_fmp_api_key"
-export NASDAQ_DATA_LINK_API_KEY="your_nasdaq_data_link_api_key"
-```
-
 #### GitHub Actions Deployment
 1. Navigate to your repository on GitHub.
 2. Go to **Settings** > **Secrets and variables** > **Actions**.
 3. Click **New repository secret**.
 4. Add each secret with the exact name listed above and paste your API key as the value.
-
