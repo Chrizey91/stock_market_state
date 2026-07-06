@@ -5,7 +5,7 @@ import os
 # Add the project root and scripts directory to python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.update_data import evaluate_scorecard
+from scripts.pipeline.scorecard import evaluate_scorecard
 
 class TestScorecard(unittest.TestCase):
 

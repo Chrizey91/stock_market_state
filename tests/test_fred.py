@@ -7,7 +7,7 @@ import sys
 
 # Add the project root and scripts directory to python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from scripts.update_data import fetch_fred_series, fetch_m2_growth
+from scripts.pipeline.adapters.fred import fetch_fred_series, fetch_m2_growth
 
 class TestFredApiAndFallback(unittest.TestCase):
 
@@ -22,7 +22,7 @@ class TestFredApiAndFallback(unittest.TestCase):
         os.environ.clear()
         os.environ.update(self.original_env)
 
-    @patch('scripts.update_data.pd.read_csv')
+    @patch('scripts.pipeline.adapters.fred.pd.read_csv')
     def test_fetch_fred_series_key_absent_uses_csv(self, mock_read_csv):
         # Mock CSV response from FRED
         mock_df = pd.DataFrame({
@@ -31,7 +31,7 @@ class TestFredApiAndFallback(unittest.TestCase):
         })
         mock_read_csv.return_value = mock_df
 
-        res = fetch_fred_series('FEDFUNDS', years=5)
+        res = fetch_fred_series('FEDFUNDS', api_key=None, years=5)
         
         # Verify CSV path was used (read_csv called)
         mock_read_csv.assert_called_once_with('https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS')
@@ -43,9 +43,14 @@ class TestFredApiAndFallback(unittest.TestCase):
         self.assertEqual(res[1]['date'], '2026-06-02')
         self.assertEqual(res[1]['value'], 5.30)
 
-    @patch('scripts.update_data.requests.get')
+    @patch('scripts.pipeline.adapters.fred.requests.get')
     def test_fetch_fred_series_key_present_uses_api(self, mock_get):
         os.environ["FRED_API_KEY"] = "fake_key"
+        
+    @patch('scripts.pipeline.adapters.fred.requests.get')
+    def test_fetch_fred_series_api_success(self, mock_get):
+        # Set dummy API key
+        api_key = "fake_key"
         
         # Mock API JSON response
         mock_response = MagicMock()
@@ -60,8 +65,8 @@ class TestFredApiAndFallback(unittest.TestCase):
         mock_get.return_value = mock_response
 
         # We also need to patch read_csv to make sure it's NOT called
-        with patch('scripts.update_data.pd.read_csv') as mock_read_csv:
-            res = fetch_fred_series('FEDFUNDS', years=5)
+        with patch('scripts.pipeline.adapters.fred.pd.read_csv') as mock_read_csv:
+            res = fetch_fred_series('FEDFUNDS', api_key="fake_key", years=5)
             mock_read_csv.assert_not_called()
             mock_get.assert_called_once()
             
@@ -78,11 +83,9 @@ class TestFredApiAndFallback(unittest.TestCase):
             self.assertEqual(res[1]['date'], '2026-06-02')
             self.assertEqual(res[1]['value'], 5.30)
 
-    @patch('scripts.update_data.requests.get')
-    @patch('scripts.update_data.pd.read_csv')
+    @patch('scripts.pipeline.adapters.fred.requests.get')
+    @patch('scripts.pipeline.adapters.fred.pd.read_csv')
     def test_fetch_fred_series_api_fails_falls_back_to_csv(self, mock_read_csv, mock_get):
-        os.environ["FRED_API_KEY"] = "fake_key"
-        
         # Mock API returns error
         mock_get.side_effect = Exception("API rate limit exceeded")
         
@@ -93,7 +96,7 @@ class TestFredApiAndFallback(unittest.TestCase):
         })
         mock_read_csv.return_value = mock_df
 
-        res = fetch_fred_series('FEDFUNDS', years=5)
+        res = fetch_fred_series('FEDFUNDS', api_key="fake_key", years=5)
         
         mock_get.assert_called_once()
         mock_read_csv.assert_called_once()
@@ -102,13 +105,12 @@ class TestFredApiAndFallback(unittest.TestCase):
         self.assertEqual(res[0]['date'], '2026-06-01')
         self.assertEqual(res[0]['value'], 5.25)
 
-    @patch('scripts.update_data.requests.get')
-    @patch('scripts.update_data.pd.read_csv')
+    @patch('scripts.pipeline.adapters.fred.requests.get')
+    @patch('scripts.pipeline.adapters.fred.pd.read_csv')
     def test_fetch_m2_growth_identical_structure(self, mock_read_csv, mock_get):
         # We want to verify both paths yield identical results for fetch_m2_growth
         
         # 1. API path setup
-        os.environ["FRED_API_KEY"] = "fake_key"
         mock_response = MagicMock()
         mock_response.status_code = 200
         # M2 growth needs at least 13 months to compute YoY pct change
@@ -119,12 +121,9 @@ class TestFredApiAndFallback(unittest.TestCase):
         mock_response.json.return_value = {"observations": observations}
         mock_get.return_value = mock_response
         
-        res_api = fetch_m2_growth(years=5)
+        res_api = fetch_m2_growth(api_key="fake_key", years=5)
         
         # 2. CSV fallback path setup
-        if "FRED_API_KEY" in os.environ:
-            del os.environ["FRED_API_KEY"]
-            
         csv_rows = []
         for i in range(24):
             date_str = (datetime(2024, 1, 1) + timedelta(days=i*30)).strftime('%Y-%m-%d')
@@ -132,7 +131,7 @@ class TestFredApiAndFallback(unittest.TestCase):
         mock_df = pd.DataFrame(csv_rows)
         mock_read_csv.return_value = mock_df
         
-        res_csv = fetch_m2_growth(years=5)
+        res_csv = fetch_m2_growth(api_key=None, years=5)
         
         # Both results should be identical
         self.assertEqual(res_api, res_csv)

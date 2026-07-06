@@ -7,11 +7,12 @@ import os
 
 # Add the project root and scripts directory to python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from scripts.update_data import get_sp500_tickers, chunk_tickers, calculate_breadth, calculate_ad_line, calculate_new_highs_lows
+from scripts.pipeline.adapters.sp500 import get_sp500_tickers
+from scripts.pipeline.indicators import calculate_breadth, calculate_ad_line, calculate_new_highs_lows
 
 class TestMarketBreadth(unittest.TestCase):
     
-    @patch('scripts.update_data.requests.get')
+    @patch('scripts.pipeline.adapters.sp500.requests.get')
     def test_get_sp500_tickers(self, mock_get):
         # Mock HTML response for Wikipedia S&P 500 companies list
         mock_html = """
@@ -49,15 +50,6 @@ class TestMarketBreadth(unittest.TestCase):
         
         tickers = get_sp500_tickers()
         self.assertEqual(tickers, ["AAPL", "BRK-B", "MMM"])
-        
-    def test_chunk_tickers(self):
-        tickers = [f"T{i}" for i in range(10)]
-        chunks = chunk_tickers(tickers, 3)
-        self.assertEqual(len(chunks), 4)
-        self.assertEqual(chunks[0], ["T0", "T1", "T2"])
-        self.assertEqual(chunks[1], ["T3", "T4", "T5"])
-        self.assertEqual(chunks[2], ["T6", "T7", "T8"])
-        self.assertEqual(chunks[3], ["T9"])
 
     def test_calculate_breadth(self):
         # Create a mock DataFrame of prices
@@ -146,7 +138,7 @@ class TestMarketBreadth(unittest.TestCase):
         self.assertEqual(latest["lows"], 1)
         self.assertEqual(latest["date"], dates[-1].strftime('%Y-%m-%d'))
 
-    @patch('scripts.update_data.yf.download')
+    @patch('scripts.pipeline.adapters.sp500.yf.download')
     def test_fetch_sector_data(self, mock_yf_download):
         # We need 250 days of data for the 11 sectors
         sectors = ['XLK', 'XLF', 'XLI', 'XLV', 'XLY', 'XLP', 'XLE', 'XLU', 'XLC', 'XLRE', 'XLB']
@@ -169,7 +161,7 @@ class TestMarketBreadth(unittest.TestCase):
         mock_df = pd.DataFrame(data_values, index=dates, columns=columns)
         mock_yf_download.return_value = mock_df
         
-        from scripts.update_data import fetch_sector_data
+        from scripts.pipeline.adapters.sp500 import fetch_sector_data
         
         sector_leadership, sector_heatmap = fetch_sector_data()
         

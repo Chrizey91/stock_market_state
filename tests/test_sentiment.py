@@ -6,16 +6,12 @@ import os
 
 # Add the project root and scripts directory to python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from scripts.update_data import (
-    fetch_cnn_fear_greed,
-    fetch_insider_ratio,
-    generate_mock_fear_greed,
-    generate_mock_insider_ratio
-)
+from scripts.pipeline.adapters.sentiment import fetch_cnn_fear_greed, fetch_insider_ratio
+from scripts.pipeline.fallback import generate_mock_fear_greed, generate_mock_insider_ratio
 
 class TestSentimentIndicators(unittest.TestCase):
 
-    @patch('scripts.update_data.requests.get')
+    @patch('scripts.pipeline.adapters.sentiment.requests.get')
     def test_fetch_cnn_fear_greed_success(self, mock_get):
         # Mock successful CNN JSON response
         mock_response = MagicMock()
@@ -31,7 +27,7 @@ class TestSentimentIndicators(unittest.TestCase):
         self.assertEqual(res["date"], "2026-06-29")
         self.assertEqual(res["value"], 45.5)
 
-    @patch('scripts.update_data.requests.get')
+    @patch('scripts.pipeline.adapters.sentiment.requests.get')
     def test_fetch_insider_ratio_success(self, mock_get):
         # Mock successful OpenInsider HTML response
         mock_html = """

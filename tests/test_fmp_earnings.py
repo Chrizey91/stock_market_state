@@ -6,12 +6,8 @@ import sys
 # Add the project root and scripts directory to python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.update_data import (
-    fetch_sp500_earnings_fmp,
-    compute_yoy_growth,
-    _quarter_key,
-    _quarter_date_label,
-)
+from scripts.pipeline.indicators import compute_yoy_growth, _quarter_key, _quarter_date_label
+from scripts.pipeline.adapters.fmp import fetch_sp500_earnings_fmp
 
 
 class TestFMPEarnings(unittest.TestCase):
@@ -19,31 +15,29 @@ class TestFMPEarnings(unittest.TestCase):
     @patch.dict(os.environ, {}, clear=True)
     def test_fetch_sp500_earnings_fmp_no_key(self):
         """Verify it skips gracefully when FMP_API_KEY is absent."""
-        eps, rev = fetch_sp500_earnings_fmp()
+        eps, rev = fetch_sp500_earnings_fmp(api_key=None)
         self.assertEqual(eps, [])
         self.assertEqual(rev, [])
 
-    @patch.dict(os.environ, {"FMP_API_KEY": "dummy_key"})
-    @patch("requests.get")
+    @patch("scripts.pipeline.adapters.fmp.requests.get")
     def test_fetch_sp500_earnings_fmp_403(self, mock_get):
         """Verify it handles 403 Forbidden gracefully."""
         mock_response = MagicMock()
         mock_response.status_code = 403
         mock_get.return_value = mock_response
 
-        eps, rev = fetch_sp500_earnings_fmp()
+        eps, rev = fetch_sp500_earnings_fmp(api_key="dummy_key")
         self.assertEqual(eps, [])
         self.assertEqual(rev, [])
 
-    @patch.dict(os.environ, {"FMP_API_KEY": "dummy_key"})
-    @patch("requests.get")
+    @patch("scripts.pipeline.adapters.fmp.requests.get")
     def test_fetch_sp500_earnings_fmp_402(self, mock_get):
         """Verify it handles 402 Payment Required gracefully."""
         mock_response = MagicMock()
         mock_response.status_code = 402
         mock_get.return_value = mock_response
 
-        eps, rev = fetch_sp500_earnings_fmp()
+        eps, rev = fetch_sp500_earnings_fmp(api_key="dummy_key")
         self.assertEqual(eps, [])
         self.assertEqual(rev, [])
 
@@ -85,8 +79,7 @@ class TestFMPEarnings(unittest.TestCase):
         self.assertEqual(_quarter_date_label(2025, 4), "2025-12-31")
         self.assertEqual(_quarter_date_label(2024, 1), "2024-03-31")
 
-    @patch.dict(os.environ, {"FMP_API_KEY": "dummy_key"})
-    @patch("requests.get")
+    @patch("scripts.pipeline.adapters.fmp.requests.get")
     def test_fetch_sp500_earnings_fmp_success(self, mock_get):
         """Test successful income-statement fetch with aggregation and YoY growth.
 
@@ -126,7 +119,7 @@ class TestFMPEarnings(unittest.TestCase):
 
         mock_get.side_effect = side_effect
 
-        eps_growth, rev_growth = fetch_sp500_earnings_fmp()
+        eps_growth, rev_growth = fetch_sp500_earnings_fmp(api_key="dummy_key")
 
         # Q1 2025: AAPL EPS=2.0, MSFT EPS=3.0 → aggregate=5.0
         # Q1 2026: AAPL EPS=3.0, MSFT EPS=4.0 → aggregate=7.0
@@ -142,8 +135,7 @@ class TestFMPEarnings(unittest.TestCase):
         self.assertTrue(len(q1_2026_rev) >= 1, f"Expected Q1 2026 revenue growth, got {q1_2026_rev}")
         self.assertAlmostEqual(q1_2026_rev[0]["value"], 36.67, places=1)
 
-    @patch.dict(os.environ, {"FMP_API_KEY": "dummy_key"})
-    @patch("requests.get")
+    @patch("scripts.pipeline.adapters.fmp.requests.get")
     def test_fetch_sp500_earnings_fmp_empty_data(self, mock_get):
         """Test that empty API responses return empty arrays."""
         mock_response = MagicMock()
@@ -152,7 +144,7 @@ class TestFMPEarnings(unittest.TestCase):
         mock_response.raise_for_status = MagicMock()
         mock_get.return_value = mock_response
 
-        eps, rev = fetch_sp500_earnings_fmp()
+        eps, rev = fetch_sp500_earnings_fmp(api_key="dummy_key")
         self.assertEqual(eps, [])
         self.assertEqual(rev, [])
 

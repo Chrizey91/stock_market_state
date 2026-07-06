@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # Add the project root and scripts directory to python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.update_data import (
+from scripts.pipeline.regime import (
     normalize_vix,
     normalize_yield_curve,
     normalize_high_yield_spread,
