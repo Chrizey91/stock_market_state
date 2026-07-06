@@ -42,10 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
       updateUIHeader(marketData.last_updated);
       renderHeroSection(marketData);
       renderPriceTrendTab(marketData.indicators);
+      renderMarketBreadthTab(marketData.indicators);
+      renderFundamentalsValuationTab(marketData.indicators);
+      renderCreditLiquidityTab(marketData.indicators);
       renderSentimentTab(marketData.indicators);
-      renderMonetaryTab(marketData.indicators);
-      renderEconomyTab(marketData.indicators);
-      renderFundamentalsTab(marketData.indicators);
       
     } catch (error) {
       console.error("Error loading market data:", error);
@@ -295,11 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
       charts.equalVsCap = new ApexCharts(document.querySelector("#equal-vs-cap-chart"), options);
       charts.equalVsCap.render();
     }
-  }
 
-  // Sentiment & Volatility Tab Rendering
-  function renderSentimentTab(indicators) {
-    // 1. VIX Chart & Indicator
+    // 3. VIX Chart & Indicator
     const vixData = indicators.vix || [];
     if (vixData.length > 0) {
       const latestVix = vixData[vixData.length - 1];
@@ -336,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }],
         chart: {
           type: 'area',
-          height: '100%',
+          height: 450,
           background: 'transparent',
           foreColor: '#a1a1aa',
           toolbar: { show: false },
@@ -380,6 +377,10 @@ document.addEventListener('DOMContentLoaded', () => {
       charts.vix = new ApexCharts(document.querySelector("#vix-chart"), options);
       charts.vix.render();
     }
+  }
+
+  // Sentiment Tab Rendering
+  function renderSentimentTab(indicators) {
 
     // 2. CNN Fear & Greed Chart & Indicator
     const fgData = indicators.fear_greed || [];
@@ -589,8 +590,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Monetary & Liquidity Tab Rendering
-  function renderMonetaryTab(indicators) {
+  // Credit & Liquidity Tab Rendering
+  function renderCreditLiquidityTab(indicators) {
     const fedFunds = indicators.fed_funds || [];
     const treasury10y = indicators.treasury_10y || [];
     const yieldCurve = indicators.yield_curve || [];
@@ -796,62 +797,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Economy & Internals Tab Rendering
-  function renderEconomyTab(indicators) {
-    const ismPmi = indicators.ism_pmi || [];
-
-    // Render ISM Manufacturing PMI Chart
-    if (ismPmi.length > 0) {
-      const pmiSeries = ismPmi.map(item => [new Date(item.date).getTime(), item.value]);
-      const opts = {
-        series: [{
-          name: 'ISM Manufacturing PMI',
-          data: pmiSeries
-        }],
-        chart: {
-          type: 'line',
-          height: '100%',
-          background: 'transparent',
-          foreColor: '#a1a1aa',
-          toolbar: { show: false },
-          animations: { enabled: true, easing: 'easeinout', speed: 800 }
-        },
-        colors: ['#a78bfa'],
-        stroke: { curve: 'smooth', width: 2.5 },
-        grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
-        xaxis: {
-          type: 'datetime',
-          axisBorder: { show: false },
-          axisTicks: { show: false }
-        },
-        yaxis: {
-          tickAmount: 5,
-          labels: {
-            formatter: (value) => value.toFixed(1)
-          }
-        },
-        tooltip: {
-          x: { format: 'yyyy-MM-dd' },
-          theme: 'dark'
-        },
-        annotations: {
-          yaxis: [{
-            y: 50,
-            borderColor: '#fbbf24',
-            strokeDashArray: 4,
-            width: '100%',
-            label: {
-              borderColor: '#fbbf24',
-              style: { color: '#000', background: '#fbbf24', fontWeight: 600 },
-              text: 'Expansion Threshold (50)'
-            }
-          }]
-        }
-      };
-      if (charts.ismPmi) charts.ismPmi.destroy();
-      charts.ismPmi = new ApexCharts(document.querySelector("#ism-pmi-chart"), opts);
-      charts.ismPmi.render();
-    }
+  // Market Breadth Tab Rendering
+  function renderMarketBreadthTab(indicators) {
 
     // Render S&P 500 Breadth Chart
     const sp500Breadth = indicators.sp500_breadth || [];
@@ -1209,8 +1156,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Fundamentals Tab Rendering
-  function renderFundamentalsTab(indicators) {
+  // Fundamentals & Valuation Tab Rendering
+  function renderFundamentalsValuationTab(indicators) {
     const epsData = indicators.eps_growth || [];
     const revData = indicators.revenue_growth || [];
 

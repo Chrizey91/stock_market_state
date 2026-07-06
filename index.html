@@ -120,15 +120,7 @@
           <i data-lucide="trending-up"></i>
           <span>Price & Trend</span>
         </button>
-        <button class="tab-btn" data-tab="sentiment" id="tab-btn-sentiment">
-          <i data-lucide="compass"></i>
-          <span>Sentiment & Volatility</span>
-        </button>
-        <button class="tab-btn" data-tab="monetary" id="tab-btn-monetary">
-          <i data-lucide="landmark"></i>
-          <span>Credit & Liquidity</span>
-        </button>
-        <button class="tab-btn" data-tab="economy" id="tab-btn-economy">
+        <button class="tab-btn" data-tab="market-breadth" id="tab-btn-market-breadth">
           <i data-lucide="bar-chart-3"></i>
           <span>Market Breadth</span>
         </button>
@@ -136,13 +128,21 @@
           <i data-lucide="bar-chart-2"></i>
           <span>Fundamentals & Valuation</span>
         </button>
+        <button class="tab-btn" data-tab="credit-liquidity" id="tab-btn-credit-liquidity">
+          <i data-lucide="landmark"></i>
+          <span>Credit & Liquidity</span>
+        </button>
+        <button class="tab-btn" data-tab="sentiment" id="tab-btn-sentiment">
+          <i data-lucide="compass"></i>
+          <span>Sentiment</span>
+        </button>
       </nav>
 
       <!-- Tab Content Area -->
       <div class="tab-content">
         <!-- Price & Trend Section -->
         <section id="price-trend-tab" class="tab-pane active">
-          <div class="grid-layout cols-2">
+          <div class="grid-layout cols-3">
             <!-- S&P 500 Price & Trend Chart -->
             <div class="card chart-card">
               <div class="card-header">
@@ -175,6 +175,41 @@
               </div>
               <div class="card-body">
                 <div id="sp500-trend-chart" class="chart-container" style="height: 400px;"></div>
+              </div>
+            </div>
+
+            <!-- CBOE Volatility Index (VIX) -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">VOLATILITY</span>
+                  <h2>CBOE Volatility Index (VIX)</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span id="vix-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="vix-current-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-vix">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>About the Volatility Index (VIX)</h4>
+                      <p>Often referred to as the stock market's "fear gauge", the VIX represents the market's expectation of 30-day forward-looking volatility derived from S&P 500 index options.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&lt; 15 (Complacency):</strong> Indicates low risk perception, typical in mature bull markets.</li>
+                        <li><strong>15 - 25 (Normal):</strong> Standard trading environment with typical market fluctuations.</li>
+                        <li><strong>25 - 35 (Elevated Fear):</strong> High uncertainty. Often correlates with market corrections.</li>
+                        <li><strong>&gt; 35 (Panic):</strong> Extreme distress, capitulation, and potential long-term buying opportunities.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="vix-chart" class="chart-container" style="height: 400px;"></div>
               </div>
             </div>
 
@@ -213,118 +248,298 @@
           </div>
         </section>
 
-        <!-- Sentiment & Volatility Section -->
-        <section id="sentiment-tab" class="tab-pane">
+        <!-- Market Breadth Section -->
+        <section id="market-breadth-tab" class="tab-pane">
           <div class="grid-layout cols-3">
-            <!-- CBOE Volatility Index (VIX) -->
+            <!-- S&P 500 Breadth -->
             <div class="card chart-card">
               <div class="card-header">
                 <div class="card-title-group">
-                  <span class="category-tag">VOLATILITY</span>
-                  <h2>CBOE Volatility Index (VIX)</h2>
-                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
-                    <span id="vix-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
-                    <span id="vix-current-status" class="stat-status">LOADING</span>
-                  </div>
+                  <span class="category-tag">MARKET INTERNALS</span>
+                  <h2>S&P 500 Breadth (% > 200 SMA)</h2>
                 </div>
                 <div class="card-actions">
                   <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-vix">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-breadth">
                       <i data-lucide="info"></i>
                     </button>
                     <div class="info-tooltip-dropdown">
-                      <h4>About the Volatility Index (VIX)</h4>
-                      <p>Often referred to as the stock market's "fear gauge", the VIX represents the market's expectation of 30-day forward-looking volatility derived from S&P 500 index options.</p>
+                      <h4>S&P 500 Breadth (% > 200-day SMA)</h4>
+                      <p>The percentage of S&P 500 stocks trading above their 200-day simple moving average. A key measure of stock market participation and internal strength.</p>
                       <hr>
                       <ul>
-                        <li><strong>&lt; 15 (Complacency):</strong> Indicates low risk perception, typical in mature bull markets.</li>
-                        <li><strong>15 - 25 (Normal):</strong> Standard trading environment with typical market fluctuations.</li>
-                        <li><strong>25 - 35 (Elevated Fear):</strong> High uncertainty. Often correlates with market corrections.</li>
-                        <li><strong>&gt; 35 (Panic):</strong> Extreme distress, capitulation, and potential long-term buying opportunities.</li>
+                        <li><strong>&gt; 70% (Bullish Support):</strong> Indicates broad-based bullish support. Rallies with high participation are healthier and more sustainable.</li>
+                        <li><strong>30% - 70% (Neutral):</strong> Normal market conditions with mixed individual stock trends.</li>
+                        <li><strong>&lt; 30% (Capitulation/Weakness):</strong> Suggests major capitulation or severe systemic weakness. Often indicates oversold market bottoms or ongoing bear markets.</li>
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="card-body">
-                <div id="vix-chart" class="chart-container"></div>
+                <div id="sp500-breadth-chart" class="chart-container"></div>
               </div>
             </div>
 
-            <!-- CNN Fear & Greed Index -->
+            <!-- S&P 500 Advance-Decline -->
             <div class="card chart-card">
               <div class="card-header">
                 <div class="card-title-group">
-                  <span class="category-tag">MARKET SENTIMENT</span>
-                  <h2>CNN Fear & Greed Index</h2>
-                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
-                    <span id="fear-greed-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
-                    <span id="fear-greed-current-status" class="stat-status">LOADING</span>
-                  </div>
+                  <span class="category-tag">MARKET BREADTH</span>
+                  <h2>S&P 500 Advance-Decline</h2>
                 </div>
                 <div class="card-actions">
                   <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-fear-greed">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-ad-line">
                       <i data-lucide="info"></i>
                     </button>
                     <div class="info-tooltip-dropdown">
-                      <h4>About CNN Fear & Greed Index</h4>
-                      <p>A compilation of 7 market indicators tracking investor sentiment. Shows whether fear or greed is driving current stock market pricing.</p>
+                      <h4>About S&P 500 Advance-Decline Line</h4>
+                      <p>The cumulative difference between the number of advancing and declining S&P 500 constituents each day. It measures market participation and internals.</p>
                       <hr>
-                      <ul>
-                        <li><strong>&lt; 25 (Extreme Fear):</strong> High investor distress. Historically associated with market bottoms.</li>
-                        <li><strong>25 - 45 (Fear):</strong> Investor caution and concern.</li>
-                        <li><strong>45 - 55 (Neutral):</strong> Balanced outlook.</li>
-                        <li><strong>55 - 75 (Greed):</strong> High investor optimism and confidence.</li>
-                        <li><strong>&gt; 75 (Extreme Greed):</strong> High complacency. Often precedes market corrections.</li>
-                      </ul>
+                      <p><strong>Significance:</strong> Divergence between the index and the A/D line is a major warning signal (e.g. a rising index but a falling A/D line, or a rising A/D line diverging from a falling index). A rising A/D line diverging from a falling index is a warning signal.</p>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="card-body">
-                <div id="fear-greed-chart" class="chart-container"></div>
+                <div id="sp500-ad-line-chart" class="chart-container"></div>
               </div>
             </div>
 
-            <!-- Insider Buying/Selling Ratio -->
+            <!-- S&P 500 New Highs/Lows -->
             <div class="card chart-card">
               <div class="card-header">
                 <div class="card-title-group">
-                  <span class="category-tag">INSIDER ACTIVITY</span>
-                  <h2>Insider Buy/Sell Ratio</h2>
-                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
-                    <span id="insider-ratio-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
-                    <span id="insider-ratio-current-status" class="stat-status">LOADING</span>
-                  </div>
+                  <span class="category-tag">MARKET BREADTH</span>
+                  <h2>S&P 500 New Highs/Lows</h2>
                 </div>
                 <div class="card-actions">
                   <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-insider-ratio">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-highs-lows">
                       <i data-lucide="info"></i>
                     </button>
                     <div class="info-tooltip-dropdown">
-                      <h4>About Insider Buy/Sell Ratio</h4>
-                      <p>The ratio of insider buy transactions to sell transactions reported on OpenInsider over the trailing 30 days.</p>
+                      <h4>About S&P 500 New Highs/Lows</h4>
+                      <p>Tracks the daily count of S&P 500 components making new 52-week highs versus new 52-week lows.</p>
                       <hr>
-                      <ul>
-                        <li><strong>&gt; 0.50 (High Confidence):</strong> Significant buying spikes represent corporate confidence and signal market bottoms.</li>
-                        <li><strong>0.15 - 0.50 (Normal):</strong> Balanced activity with typical corporate stock transactions.</li>
-                        <li><strong>&lt; 0.15 (Low Ratio):</strong> Low buying activity. Insiders typically sell shares for diversification and liquidity reasons.</li>
-                      </ul>
+                      <p><strong>Significance:</strong> Shows the internal expansion or contraction of the market. A healthy market rally has many more stocks making new highs than new lows. A sudden spike in new lows during a rally is a warning sign of internal weakness.</p>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="card-body">
-                <div id="insider-ratio-chart" class="chart-container"></div>
+                <div id="sp500-highs-lows-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- Sector MA Breadth -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">MARKET BREADTH</span>
+                  <h2>Sector MA Breadth</h2>
+                  <p id="sector-breadth-summary" class="card-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Loading sector breadth...</p>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sector-breadth">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Sector MA Breadth</h4>
+                      <p>Measures how many of the 11 SPDR sector ETFs are trading above their 200-day moving average. Broad participation indicates a healthy market regime.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>&gt;= 8 Sectors (Broad Leadership):</strong> Bullish. Broad participation across cyclical and defensive sectors.</li>
+                        <li><strong>5 - 7 Sectors (Mixed):</strong> Neutral. Select sectors leading, rotation active.</li>
+                        <li><strong>&lt; 5 Sectors (Narrow Leadership):</strong> Bearish/Warning. High concentration or broad market weakness.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body" style="height: 320px;">
+                <div id="sector-leadership-chart" class="chart-container"></div>
+              </div>
+            </div>
+
+            <!-- Sector Performance Heatmap -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">MARKET BREADTH</span>
+                  <h2>Sector Performance Heatmap</h2>
+                  <p class="card-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">1-Week, 1-Month, and 3-Month sector returns</p>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sector-heatmap">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Sector Performance Heatmap</h4>
+                      <p>Displays the returns of the 11 SPDR sector ETFs across 1-week, 1-month, and 3-month windows to identify sector rotation and momentum trends.</p>
+                      <hr>
+                      <p>Useful for detecting rotation from defensive sectors (e.g. XLU, XLP, XLV) to cyclical sectors (e.g. XLK, XLY, XLI) or vice versa.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body" style="height: 320px;">
+                <div id="sector-heatmap-chart" class="chart-container"></div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Monetary & Liquidity Section -->
-        <section id="monetary-tab" class="tab-pane">
+        <!-- Fundamentals & Valuation Section -->
+        <section id="fundamentals-tab" class="tab-pane">
+          <div class="grid-layout cols-2">
+            <!-- S&P 500 EPS Growth Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">FUNDAMENTALS</span>
+                  <h2>S&P 500 EPS Growth (YoY)</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="eps-growth-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="eps-growth-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-eps-growth">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>S&P 500 EPS Growth</h4>
+                      <p>Year-over-Year (YoY) growth of aggregate S&P 500 Earnings Per Share (EPS), updated quarterly.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>Healthy (YoY > 0%):</strong> Corporate earnings are expanding.</li>
+                        <li><strong>Unhealthy (YoY &lt;= 0%):</strong> Corporate earnings are contracting.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="eps-growth-chart" class="chart-container" style="height: 400px;"></div>
+                <div id="eps-growth-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                  Configure FMP_API_KEY to enable EPS Growth chart.
+                </div>
+              </div>
+            </div>
+
+            <!-- S&P 500 Revenue Growth Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">FUNDAMENTALS</span>
+                  <h2>S&P 500 Revenue Growth (YoY)</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="revenue-growth-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="revenue-growth-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-revenue-growth">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>S&P 500 Revenue Growth</h4>
+                      <p>Year-over-Year (YoY) growth of aggregate S&P 500 Revenue, updated quarterly.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>Healthy (YoY > 0%):</strong> Corporate revenues are expanding.</li>
+                        <li><strong>Unhealthy (YoY &lt;= 0%):</strong> Corporate revenues are contracting.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="revenue-growth-chart" class="chart-container" style="height: 400px;"></div>
+                <div id="revenue-growth-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                  Configure FMP_API_KEY to enable Revenue Growth chart.
+                </div>
+              </div>
+            </div>
+
+            <!-- S&P 500 Forward P/E Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">VALUATION</span>
+                  <h2>S&P 500 Forward P/E</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="forward-pe-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="forward-pe-status" class="stat-status">LOADING</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-forward-pe">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>S&P 500 Forward P/E</h4>
+                      <p>The Forward Price-to-Earnings (P/E) ratio of the S&P 500. It measures the index price relative to the forecasted earnings per share for the next 12 months.</p>
+                      <hr>
+                      <ul>
+                        <li><strong>Healthy (14 to 22):</strong> The market is reasonably valued relative to expected future corporate earnings.</li>
+                        <li><strong>Unhealthy (&lt; 14 or &gt; 22):</strong> Below 14 indicates severe undervaluation or low growth expectations; above 22 indicates expensive valuation / potential bubble territory.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="forward-pe-chart" class="chart-container" style="height: 400px;"></div>
+                <div id="forward-pe-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                  Configure FMP_API_KEY to enable Forward P/E chart.
+                </div>
+              </div>
+            </div>
+
+            <!-- Shiller CAPE Ratio Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="category-tag">VALUATION</span>
+                  <h2>Shiller CAPE Ratio</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
+                    <span id="cape-ratio-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <div class="info-tooltip-container">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-cape-ratio">
+                      <i data-lucide="info"></i>
+                    </button>
+                    <div class="info-tooltip-dropdown">
+                      <h4>Shiller CAPE Ratio</h4>
+                      <p>The Cyclically Adjusted Price-to-Earnings (CAPE) ratio, also known as the Shiller P/E. It is computed by dividing the real price of the S&P 500 by the 10-year average of real earnings per share, adjusted for inflation.</p>
+                      <hr>
+                      <p><strong>Significance:</strong> Useful for assessing long-term valuation and future returns over 10-20 year horizons. Historically, a high CAPE ratio correlates with lower long-term annualized returns, and a low CAPE ratio with higher returns.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="cape-ratio-chart" class="chart-container" style="height: 400px;"></div>
+                <div id="cape-ratio-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                  Configure NASDAQ_DATA_LINK_API_KEY to enable Shiller CAPE Ratio chart.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Credit & Liquidity Section -->
+        <section id="credit-liquidity-tab" class="tab-pane">
           <div class="grid-layout cols-2">
             <!-- Fed Funds Rate -->
             <div class="card chart-card">
@@ -546,320 +761,76 @@
           </div>
         </section>
 
-        <!-- Economy & Internals Section -->
-        <section id="economy-tab" class="tab-pane">
-          <div class="grid-layout cols-3">
-            <!-- ISM Manufacturing PMI -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">ECONOMIC ACTIVITY</span>
-                  <h2>ISM Manufacturing PMI</h2>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-ism-pmi">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>ISM Manufacturing PMI (NAPM)</h4>
-                      <p>The Purchasing Managers' Index (PMI) is a survey-based economic indicator tracking monthly changes in industrial activity and output.</p>
-                      <hr>
-                      <ul>
-                        <li><strong>&gt; 50 (Expansion):</strong> Indicates manufacturing activity is expanding. High values show strong economic demand.</li>
-                        <li><strong>&lt; 50 (Contraction):</strong> Indicates manufacturing activity is contracting. Readings below 45 signal rising recession risk.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="ism-pmi-chart" class="chart-container"></div>
-              </div>
-            </div>
-
-            <!-- S&P 500 Breadth -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">MARKET INTERNALS</span>
-                  <h2>S&P 500 Breadth (% > 200 SMA)</h2>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-breadth">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>S&P 500 Breadth (% > 200-day SMA)</h4>
-                      <p>The percentage of S&P 500 stocks trading above their 200-day simple moving average. A key measure of stock market participation and internal strength.</p>
-                      <hr>
-                      <ul>
-                        <li><strong>&gt; 70% (Bullish Support):</strong> Indicates broad-based bullish support. Rallies with high participation are healthier and more sustainable.</li>
-                        <li><strong>30% - 70% (Neutral):</strong> Normal market conditions with mixed individual stock trends.</li>
-                        <li><strong>&lt; 30% (Capitulation/Weakness):</strong> Suggests major capitulation or severe systemic weakness. Often indicates oversold market bottoms or ongoing bear markets.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="sp500-breadth-chart" class="chart-container"></div>
-              </div>
-            </div>
-
-            <!-- S&P 500 Advance-Decline -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">MARKET BREADTH</span>
-                  <h2>S&P 500 Advance-Decline</h2>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-ad-line">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>About S&P 500 Advance-Decline Line</h4>
-                      <p>The cumulative difference between the number of advancing and declining S&P 500 constituents each day. It measures market participation and internals.</p>
-                      <hr>
-                      <p><strong>Significance:</strong> Divergence between the index and the A/D line is a major warning signal (e.g. a rising index but a falling A/D line, or a rising A/D line diverging from a falling index). A rising A/D line diverging from a falling index is a warning signal.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="sp500-ad-line-chart" class="chart-container"></div>
-              </div>
-            </div>
-
-            <!-- S&P 500 New Highs/Lows -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">MARKET BREADTH</span>
-                  <h2>S&P 500 New Highs/Lows</h2>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sp500-highs-lows">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>About S&P 500 New Highs/Lows</h4>
-                      <p>Tracks the daily count of S&P 500 components making new 52-week highs versus new 52-week lows.</p>
-                      <hr>
-                      <p><strong>Significance:</strong> Shows the internal expansion or contraction of the market. A healthy market rally has many more stocks making new highs than new lows. A sudden spike in new lows during a rally is a warning sign of internal weakness.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="sp500-highs-lows-chart" class="chart-container"></div>
-              </div>
-            </div>
-
-            <!-- Sector MA Breadth -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">MARKET BREADTH</span>
-                  <h2>Sector MA Breadth</h2>
-                  <p id="sector-breadth-summary" class="card-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Loading sector breadth...</p>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sector-breadth">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>Sector MA Breadth</h4>
-                      <p>Measures how many of the 11 SPDR sector ETFs are trading above their 200-day moving average. Broad participation indicates a healthy market regime.</p>
-                      <hr>
-                      <ul>
-                        <li><strong>&gt;= 8 Sectors (Broad Leadership):</strong> Bullish. Broad participation across cyclical and defensive sectors.</li>
-                        <li><strong>5 - 7 Sectors (Mixed):</strong> Neutral. Select sectors leading, rotation active.</li>
-                        <li><strong>&lt; 5 Sectors (Narrow Leadership):</strong> Bearish/Warning. High concentration or broad market weakness.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body" style="height: 320px;">
-                <div id="sector-leadership-chart" class="chart-container"></div>
-              </div>
-            </div>
-
-            <!-- Sector Performance Heatmap -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">MARKET BREADTH</span>
-                  <h2>Sector Performance Heatmap</h2>
-                  <p class="card-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">1-Week, 1-Month, and 3-Month sector returns</p>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-sector-heatmap">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>Sector Performance Heatmap</h4>
-                      <p>Displays the returns of the 11 SPDR sector ETFs across 1-week, 1-month, and 3-month windows to identify sector rotation and momentum trends.</p>
-                      <hr>
-                      <p>Useful for detecting rotation from defensive sectors (e.g. XLU, XLP, XLV) to cyclical sectors (e.g. XLK, XLY, XLI) or vice versa.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body" style="height: 320px;">
-                <div id="sector-heatmap-chart" class="chart-container"></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Fundamentals Section -->
-        <section id="fundamentals-tab" class="tab-pane">
+        <!-- Sentiment Section -->
+        <section id="sentiment-tab" class="tab-pane">
           <div class="grid-layout cols-2">
-            <!-- S&P 500 EPS Growth Chart -->
+            <!-- CNN Fear & Greed Index -->
             <div class="card chart-card">
               <div class="card-header">
                 <div class="card-title-group">
-                  <span class="category-tag">FUNDAMENTALS</span>
-                  <h2>S&P 500 EPS Growth (YoY)</h2>
-                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
-                    <span id="eps-growth-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
-                    <span id="eps-growth-status" class="stat-status">LOADING</span>
+                  <span class="category-tag">MARKET SENTIMENT</span>
+                  <h2>CNN Fear & Greed Index</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span id="fear-greed-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="fear-greed-current-status" class="stat-status">LOADING</span>
                   </div>
                 </div>
                 <div class="card-actions">
                   <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-eps-growth">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-fear-greed">
                       <i data-lucide="info"></i>
                     </button>
                     <div class="info-tooltip-dropdown">
-                      <h4>S&P 500 EPS Growth</h4>
-                      <p>Year-over-Year (YoY) growth of aggregate S&P 500 Earnings Per Share (EPS), updated quarterly.</p>
+                      <h4>About CNN Fear & Greed Index</h4>
+                      <p>A compilation of 7 market indicators tracking investor sentiment. Shows whether fear or greed is driving current stock market pricing.</p>
                       <hr>
                       <ul>
-                        <li><strong>Healthy (YoY > 0%):</strong> Corporate earnings are expanding.</li>
-                        <li><strong>Unhealthy (YoY &lt;= 0%):</strong> Corporate earnings are contracting.</li>
+                        <li><strong>&lt; 25 (Extreme Fear):</strong> High investor distress. Historically associated with market bottoms.</li>
+                        <li><strong>25 - 45 (Fear):</strong> Investor caution and concern.</li>
+                        <li><strong>45 - 55 (Neutral):</strong> Balanced outlook.</li>
+                        <li><strong>55 - 75 (Greed):</strong> High investor optimism and confidence.</li>
+                        <li><strong>&gt; 75 (Extreme Greed):</strong> High complacency. Often precedes market corrections.</li>
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="card-body">
-                <div id="eps-growth-chart" class="chart-container" style="height: 400px;"></div>
-                <div id="eps-growth-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
-                  Configure FMP_API_KEY to enable EPS Growth chart.
-                </div>
+                <div id="fear-greed-chart" class="chart-container"></div>
               </div>
             </div>
 
-            <!-- S&P 500 Revenue Growth Chart -->
+            <!-- Insider Buying/Selling Ratio -->
             <div class="card chart-card">
               <div class="card-header">
                 <div class="card-title-group">
-                  <span class="category-tag">FUNDAMENTALS</span>
-                  <h2>S&P 500 Revenue Growth (YoY)</h2>
-                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
-                    <span id="revenue-growth-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
-                    <span id="revenue-growth-status" class="stat-status">LOADING</span>
+                  <span class="category-tag">INSIDER ACTIVITY</span>
+                  <h2>Insider Buy/Sell Ratio</h2>
+                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span id="insider-ratio-current-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
+                    <span id="insider-ratio-current-status" class="stat-status">LOADING</span>
                   </div>
                 </div>
                 <div class="card-actions">
                   <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-revenue-growth">
+                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-insider-ratio">
                       <i data-lucide="info"></i>
                     </button>
                     <div class="info-tooltip-dropdown">
-                      <h4>S&P 500 Revenue Growth</h4>
-                      <p>Year-over-Year (YoY) growth of aggregate S&P 500 Revenue, updated quarterly.</p>
+                      <h4>About Insider Buy/Sell Ratio</h4>
+                      <p>The ratio of insider buy transactions to sell transactions reported on OpenInsider over the trailing 30 days.</p>
                       <hr>
                       <ul>
-                        <li><strong>Healthy (YoY > 0%):</strong> Corporate revenues are expanding.</li>
-                        <li><strong>Unhealthy (YoY &lt;= 0%):</strong> Corporate revenues are contracting.</li>
+                        <li><strong>&gt; 0.50 (High Confidence):</strong> Significant buying spikes represent corporate confidence and signal market bottoms.</li>
+                        <li><strong>0.15 - 0.50 (Normal):</strong> Balanced activity with typical corporate stock transactions.</li>
+                        <li><strong>&lt; 0.15 (Low Ratio):</strong> Low buying activity. Insiders typically sell shares for diversification and liquidity reasons.</li>
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="card-body">
-                <div id="revenue-growth-chart" class="chart-container" style="height: 400px;"></div>
-                <div id="revenue-growth-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
-                  Configure FMP_API_KEY to enable Revenue Growth chart.
-                </div>
-              </div>
-            </div>
-
-            <!-- S&P 500 Forward P/E Chart -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">VALUATION</span>
-                  <h2>S&P 500 Forward P/E</h2>
-                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
-                    <span id="forward-pe-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
-                    <span id="forward-pe-status" class="stat-status">LOADING</span>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-forward-pe">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>S&P 500 Forward P/E</h4>
-                      <p>The Forward Price-to-Earnings (P/E) ratio of the S&P 500. It measures the index price relative to the forecasted earnings per share for the next 12 months.</p>
-                      <hr>
-                      <ul>
-                        <li><strong>Healthy (14 to 22):</strong> The market is reasonably valued relative to expected future corporate earnings.</li>
-                        <li><strong>Unhealthy (&lt; 14 or &gt; 22):</strong> Below 14 indicates severe undervaluation or low growth expectations; above 22 indicates expensive valuation / potential bubble territory.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="forward-pe-chart" class="chart-container" style="height: 400px;"></div>
-                <div id="forward-pe-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
-                  Configure FMP_API_KEY to enable Forward P/E chart.
-                </div>
-              </div>
-            </div>
-
-            <!-- Shiller CAPE Ratio Chart -->
-            <div class="card chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <span class="category-tag">VALUATION</span>
-                  <h2>Shiller CAPE Ratio</h2>
-                  <div style="margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
-                    <span id="cape-ratio-val" style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">--</span>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <div class="info-tooltip-container">
-                    <button class="info-btn" aria-label="Indicator Information" id="tooltip-cape-ratio">
-                      <i data-lucide="info"></i>
-                    </button>
-                    <div class="info-tooltip-dropdown">
-                      <h4>Shiller CAPE Ratio</h4>
-                      <p>The Cyclically Adjusted Price-to-Earnings (CAPE) ratio, also known as the Shiller P/E. It is computed by dividing the real price of the S&P 500 by the 10-year average of real earnings per share, adjusted for inflation.</p>
-                      <hr>
-                      <p><strong>Significance:</strong> Useful for assessing long-term valuation and future returns over 10-20 year horizons. Historically, a high CAPE ratio correlates with lower long-term annualized returns, and a low CAPE ratio with higher returns.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="cape-ratio-chart" class="chart-container" style="height: 400px;"></div>
-                <div id="cape-ratio-fallback" class="fallback-message" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
-                  Configure NASDAQ_DATA_LINK_API_KEY to enable Shiller CAPE Ratio chart.
-                </div>
+                <div id="insider-ratio-chart" class="chart-container"></div>
               </div>
             </div>
           </div>
