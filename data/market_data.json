@@ -1,11 +1,7 @@
 {
-  "last_updated": "2026-07-14T10:44:20.861672+00:00",
+  "last_updated": "2026-07-15T10:48:32.751585+00:00",
   "indicators": {
     "vix": [
-      {
-        "date": "2025-07-14",
-        "value": 17.2
-      },
       {
         "date": "2025-07-15",
         "value": 17.38
@@ -1011,17 +1007,11 @@
         "value": 17.16
       },
       {
-        "date": "2026-07-14",
-        "value": 17.32
+        "date": "2026-07-15",
+        "value": 16.39
       }
     ],
     "sp500_trend": [
-      {
-        "date": "2025-07-15",
-        "value": 6243.76,
-        "ma50": 5990.01,
-        "ma200": 5862.86
-      },
       {
         "date": "2025-07-16",
         "value": 6263.7,
@@ -2519,10 +2509,6 @@
     ],
     "sp500_breadth": [
       {
-        "date": "2025-07-15",
-        "value": 60.12
-      },
-      {
         "date": "2025-07-16",
         "value": 62.32
       },
@@ -3517,13 +3503,13 @@
       {
         "date": "2026-07-13",
         "value": 68.14
+      },
+      {
+        "date": "2026-07-14",
+        "value": 57.81
       }
     ],
     "sp500_ad_line": [
-      {
-        "date": "2025-07-15",
-        "value": 6607
-      },
       {
         "date": "2025-07-16",
         "value": 6793
@@ -4519,14 +4505,13 @@
       {
         "date": "2026-07-13",
         "value": 11005
+      },
+      {
+        "date": "2026-07-14",
+        "value": 11006
       }
     ],
     "sp500_new_highs_lows": [
-      {
-        "date": "2025-07-15",
-        "highs": 0,
-        "lows": 0
-      },
       {
         "date": "2025-07-16",
         "highs": 20,
@@ -5771,15 +5756,14 @@
         "date": "2026-07-13",
         "highs": 28,
         "lows": 2
+      },
+      {
+        "date": "2026-07-14",
+        "highs": 2,
+        "lows": 0
       }
     ],
     "equal_vs_cap_weight": [
-      {
-        "date": "2025-10-10",
-        "rsp_return": 0.71,
-        "spy_return": 4.8,
-        "spread": -4.09
-      },
       {
         "date": "2025-10-13",
         "rsp_return": 3.12,
@@ -6904,24 +6888,24 @@
       }
     ],
     "sector_leadership": {
-      "above_200d": 9,
+      "above_200d": 1,
       "total": 11,
       "sectors": [
         {
           "name": "XLK",
-          "above": true
+          "above": false
         },
         {
           "name": "XLF",
-          "above": true
+          "above": false
         },
         {
           "name": "XLI",
-          "above": true
+          "above": false
         },
         {
           "name": "XLV",
-          "above": true
+          "above": false
         },
         {
           "name": "XLY",
@@ -6929,15 +6913,15 @@
         },
         {
           "name": "XLP",
-          "above": true
+          "above": false
         },
         {
           "name": "XLE",
-          "above": true
+          "above": false
         },
         {
           "name": "XLU",
-          "above": true
+          "above": false
         },
         {
           "name": "XLC",
@@ -6949,76 +6933,76 @@
         },
         {
           "name": "XLB",
-          "above": true
+          "above": false
         }
       ]
     },
     "sector_heatmap": [
       {
         "sector": "XLK",
-        "1w": -1.25,
-        "1m": 2.75,
-        "3m": 27.26
+        "1w": null,
+        "1m": null,
+        "3m": null
       },
       {
         "sector": "XLF",
-        "1w": -0.12,
-        "1m": 7.73,
-        "3m": 10.83
+        "1w": null,
+        "1m": null,
+        "3m": null
       },
       {
         "sector": "XLI",
-        "1w": -2.8,
-        "1m": 6.57,
-        "3m": 5.42
+        "1w": null,
+        "1m": null,
+        "3m": null
       },
       {
         "sector": "XLV",
-        "1w": -0.34,
-        "1m": 6.07,
-        "3m": 10.05
+        "1w": null,
+        "1m": null,
+        "3m": null
       },
       {
         "sector": "XLY",
-        "1w": -1.67,
-        "1m": 2.45,
-        "3m": 3.0
+        "1w": null,
+        "1m": null,
+        "3m": null
       },
       {
         "sector": "XLP",
-        "1w": 0.58,
-        "1m": -0.37,
-        "3m": 3.41
+        "1w": null,
+        "1m": null,
+        "3m": null
       },
       {
         "sector": "XLE",
-        "1w": 6.79,
-        "1m": -1.89,
-        "3m": 0.37
+        "1w": null,
+        "1m": null,
+        "3m": null
       },
       {
         "sector": "XLU",
-        "1w": 0.93,
-        "1m": 4.57,
-        "3m": -2.02
+        "1w": null,
+        "1m": null,
+        "3m": null
       },
       {
         "sector": "XLC",
-        "1w": 1.25,
-        "1m": 0.78,
-        "3m": -1.82
+        "1w": 0.39,
+        "1m": -0.34,
+        "3m": -2.68
       },
       {
         "sector": "XLRE",
-        "1w": 0.93,
-        "1m": 0.23,
-        "3m": 5.31
+        "1w": -0.91,
+        "1m": -0.11,
+        "3m": 4.3
       },
       {
         "sector": "XLB",
-        "1w": -2.69,
-        "1m": 2.36,
-        "3m": -2.29
+        "1w": null,
+        "1m": null,
+        "3m": null
       }
     ],
     "fed_funds": [
@@ -7260,10 +7244,6 @@
       }
     ],
     "treasury_10y": [
-      {
-        "date": "2021-07-16",
-        "value": 1.31
-      },
       {
         "date": "2021-07-19",
         "value": 1.19
@@ -12239,13 +12219,13 @@
       {
         "date": "2026-07-10",
         "value": 4.56
+      },
+      {
+        "date": "2026-07-13",
+        "value": 4.62
       }
     ],
     "yield_curve": [
-      {
-        "date": "2021-07-16",
-        "value": 1.06
-      },
       {
         "date": "2021-07-19",
         "value": 0.98
@@ -17225,13 +17205,13 @@
       {
         "date": "2026-07-13",
         "value": 0.36
+      },
+      {
+        "date": "2026-07-14",
+        "value": 0.4
       }
     ],
     "high_yield_spread": [
-      {
-        "date": "2023-07-14",
-        "value": 3.9
-      },
       {
         "date": "2023-07-17",
         "value": 3.97
@@ -20367,13 +20347,13 @@
       {
         "date": "2026-07-10",
         "value": 2.69
+      },
+      {
+        "date": "2026-07-13",
+        "value": 2.69
       }
     ],
     "ig_spread": [
-      {
-        "date": "2023-07-14",
-        "value": 1.57
-      },
       {
         "date": "2023-07-17",
         "value": 1.58
@@ -23508,6 +23488,10 @@
       },
       {
         "date": "2026-07-10",
+        "value": 0.96
+      },
+      {
+        "date": "2026-07-13",
         "value": 0.96
       }
     ],
@@ -27335,6 +27319,10 @@
       {
         "date": "2026-07-14",
         "value": 43.74
+      },
+      {
+        "date": "2026-07-15",
+        "value": 43.77
       }
     ],
     "insider_ratio": [
@@ -28833,14 +28821,14 @@
       {
         "date": "2026-07-14",
         "value": 0.247
+      },
+      {
+        "date": "2026-07-15",
+        "value": 0.248
       }
     ]
   },
   "market_regime": [
-    {
-      "date": "2025-07-15",
-      "value": 70.03
-    },
     {
       "date": "2025-07-16",
       "value": 70.93
@@ -29907,10 +29895,14 @@
     },
     {
       "date": "2026-07-14",
-      "value": 73.25
+      "value": 71.65
+    },
+    {
+      "date": "2026-07-15",
+      "value": 72.49
     }
   ],
-  "market_regime_score": 73.25,
+  "market_regime_score": 72.49,
   "scorecard": [
     {
       "id": "sp500_trend",
@@ -29931,7 +29923,7 @@
       "label": "% above 200-day MA",
       "category": "Breadth",
       "status": "unhealthy",
-      "value": "68.1%"
+      "value": "57.8%"
     },
     {
       "id": "sp500_ad_line",
@@ -29973,7 +29965,7 @@
       "label": "VIX",
       "category": "Volatility",
       "status": "healthy",
-      "value": 17.32
+      "value": 16.39
     },
     {
       "id": "hy_spread",
@@ -29993,10 +29985,10 @@
       "id": "sector_leadership",
       "label": "Sector MA Breadth",
       "category": "Leadership",
-      "status": "healthy",
-      "value": "9/11"
+      "status": "unhealthy",
+      "value": "1/11"
     }
   ],
-  "health_score": 10,
+  "health_score": 9,
   "health_total": 11
 }
